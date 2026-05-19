@@ -21,14 +21,14 @@ const getAllTasks = async (req, res) => {
 const createTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { title, description, due_date } = req.body;
+    const { title, description, due_date, priority } = req.body;
     if (!title)
       return res.status(400).json({ success: false, message: "Title diperlukan" });
 
-    const [result] = await db.query(
-      "INSERT INTO tasks (user_id, title, description, due_date) VALUES (?, ?, ?, ?)",
-      [userId, title, description || null, due_date || null]
-    );
+      const [result] = await db.query(
+        "INSERT INTO tasks (user_id, title, description, due_date, priority) VALUES (?, ?, ?, ?, ?)",
+        [userId, title, description || null, due_date || null, priority || "medium"]
+      );
     const [newTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
     res.status(201).json({ success: true, message: "Task berjaya dicipta", data: newTask[0] });
   } catch (error) {
@@ -40,17 +40,34 @@ const updateTask = async (req, res) => {
   try {
     const userId = req.user.id;
     const taskId = req.params.id;
-    const { title, description, status, due_date } = req.body;
-    const [existing] = await db.query("SELECT * FROM tasks WHERE id = ? AND user_id = ?", [taskId, userId]);
-    if (existing.length === 0)
+    const { title, description, status, due_date, priority } = req.body;
+
+    const [rows] = await db.query(
+      "SELECT * FROM tasks WHERE id = ? AND user_id = ?",
+      [taskId, userId]
+    );
+
+    if (rows.length === 0) {
       return res.status(404).json({ success: false, message: "Task tidak dijumpai" });
+    }
+
+    const current = rows[0];
 
     await db.query(
-      "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ? WHERE id = ?",
-      [title || existing[0].title, description !== undefined ? description : existing[0].description, status || existing[0].status, due_date !== undefined ? due_date : existing[0].due_date, taskId]
+      "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, priority = ? WHERE id = ?",
+      [
+        title || current.title,
+        description !== undefined ? description : current.description,
+        status || current.status,
+        due_date !== undefined ? due_date : current.due_date,
+        priority || current.priority,
+        taskId,
+      ]
     );
-    const [updatedTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [taskId]);
-    res.json({ success: true, message: "Task berjaya dikemaskini", data: updatedTask[0] });
+
+    const [updated] = await db.query("SELECT * FROM tasks WHERE id = ?", [taskId]);
+
+    res.json({ success: true, message: "Task berjaya dikemaskini", data: updated[0] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
