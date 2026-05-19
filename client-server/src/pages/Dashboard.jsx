@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getTasks, createTask, updateTask, deleteTask } from "../services/api";
 
 export default function Dashboard({ user, onLogout }) {
@@ -6,10 +6,19 @@ export default function Dashboard({ user, onLogout }) {
   const [filter, setFilter] = useState("all");
   const [newTask, setNewTask] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const editRef = useRef(null);
 
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  useEffect(() => {
+    if (editingId && editRef.current) {
+      editRef.current.focus();
+    }
+  }, [editingId]);
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -39,6 +48,28 @@ export default function Dashboard({ user, onLogout }) {
   const handleDelete = async (id) => {
     const res = await deleteTask(id);
     if (res.success) setTasks(tasks.filter((t) => t.id !== id));
+  };
+
+  const startEdit = (task) => {
+    setEditingId(task.id);
+    setEditingTitle(task.title);
+  };
+
+  const handleEditSave = async (task) => {
+    if (!editingTitle.trim() || editingTitle === task.title) {
+      setEditingId(null);
+      return;
+    }
+    const res = await updateTask(task.id, { title: editingTitle });
+    if (res.success) {
+      setTasks(tasks.map((t) => (t.id === task.id ? res.data : t)));
+    }
+    setEditingId(null);
+  };
+
+  const handleEditKeyDown = (e, task) => {
+    if (e.key === "Enter") handleEditSave(task);
+    if (e.key === "Escape") setEditingId(null);
   };
 
   const filteredTasks = tasks.filter((t) => {
@@ -128,8 +159,9 @@ export default function Dashboard({ user, onLogout }) {
             {filteredTasks.map((task) => (
               <div
                 key={task.id}
-                className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 flex items-center gap-4"
+                className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 flex items-center gap-4 group"
               >
+                {/* Toggle Button */}
                 <button
                   onClick={() => handleToggle(task)}
                   className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
@@ -143,16 +175,38 @@ export default function Dashboard({ user, onLogout }) {
                   )}
                 </button>
 
-                <span
-                  className={`flex-1 ${
-                    task.status === "completed"
-                      ? "line-through text-gray-500"
-                      : "text-white"
-                  }`}
-                >
-                  {task.title}
-                </span>
+                {/* Title — Edit Mode atau Display Mode */}
+                {editingId === task.id ? (
+                  <input
+                    ref={editRef}
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onBlur={() => handleEditSave(task)}
+                    onKeyDown={(e) => handleEditKeyDown(e, task)}
+                    className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-1 outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                ) : (
+                  <span
+                    onClick={() => task.status !== "completed" && startEdit(task)}
+                    className={`flex-1 ${
+                      task.status === "completed"
+                        ? "line-through text-gray-500 cursor-not-allowed"
+                        : "text-white cursor-pointer hover:text-blue-400"
+                    }`}
+                    title={task.status !== "completed" ? "Klik untuk edit" : ""}
+                  >
+                    {task.title}
+                  </span>
+                )}
 
+                {/* Edit hint */}
+                {editingId !== task.id && task.status !== "completed" && (
+                  <span className="text-gray-600 text-xs opacity-0 group-hover:opacity-100 transition">
+                    ✏️
+                  </span>
+                )}
+
+                {/* Delete Button */}
                 <button
                   onClick={() => handleDelete(task.id)}
                   className="text-gray-600 hover:text-red-400 transition text-lg"
@@ -162,6 +216,13 @@ export default function Dashboard({ user, onLogout }) {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Edit hint text */}
+        {tasks.length > 0 && (
+          <p className="text-gray-700 text-xs text-center mt-6">
+            Klik pada task untuk edit • Enter untuk save • Esc untuk batal
+          </p>
         )}
       </div>
     </div>
