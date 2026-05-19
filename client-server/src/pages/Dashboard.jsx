@@ -5,6 +5,7 @@ export default function Dashboard({ user, onLogout }) {
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("all");
   const [newTask, setNewTask] = useState("");
+  const [newDueDate, setNewDueDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -30,10 +31,14 @@ export default function Dashboard({ user, onLogout }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
-    const res = await createTask({ title: newTask });
+    const res = await createTask({
+      title: newTask,
+      due_date: newDueDate || null,
+    });
     if (res.success) {
       setTasks([res.data, ...tasks]);
       setNewTask("");
+      setNewDueDate("");
     }
   };
 
@@ -70,6 +75,23 @@ export default function Dashboard({ user, onLogout }) {
   const handleEditKeyDown = (e, task) => {
     if (e.key === "Enter") handleEditSave(task);
     if (e.key === "Escape") setEditingId(null);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("ms-MY", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const isOverdue = (dateStr) => {
+    if (!dateStr) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(dateStr) < today;
   };
 
   const filteredTasks = tasks.filter((t) => {
@@ -115,21 +137,29 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
 
-        {/* Add Task */}
-        <form onSubmit={handleCreate} className="flex gap-3 mb-6">
-          <input
-            type="text"
-            placeholder="Tambah task baru..."
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            className="flex-1 bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
-          >
-            + Tambah
-          </button>
+        {/* Add Task Form */}
+        <form onSubmit={handleCreate} className="flex flex-col gap-3 mb-6">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder="Tambah task baru..."
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              className="flex-1 bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="date"
+              value={newDueDate}
+              onChange={(e) => setNewDueDate(e.target.value)}
+              className="bg-gray-900 border border-gray-700 text-gray-400 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+            >
+              + Tambah
+            </button>
+          </div>
         </form>
 
         {/* Filter Tabs */}
@@ -138,7 +168,7 @@ export default function Dashboard({ user, onLogout }) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === f
                   ? "bg-blue-600 text-white"
                   : "bg-gray-900 text-gray-400 hover:text-white"
@@ -175,7 +205,7 @@ export default function Dashboard({ user, onLogout }) {
                   )}
                 </button>
 
-                {/* Title — Edit Mode atau Display Mode */}
+                {/* Title + Due Date */}
                 {editingId === task.id ? (
                   <input
                     ref={editRef}
@@ -186,17 +216,37 @@ export default function Dashboard({ user, onLogout }) {
                     className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-1 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 ) : (
-                  <span
+                  <div
                     onClick={() => task.status !== "completed" && startEdit(task)}
-                    className={`flex-1 ${
-                      task.status === "completed"
-                        ? "line-through text-gray-500 cursor-not-allowed"
-                        : "text-white cursor-pointer hover:text-blue-400"
-                    }`}
-                    title={task.status !== "completed" ? "Klik untuk edit" : ""}
+                    className="flex-1 cursor-pointer"
                   >
-                    {task.title}
-                  </span>
+                    <p
+                      className={`${
+                        task.status === "completed"
+                          ? "line-through text-gray-500"
+                          : "text-white hover:text-blue-400"
+                      }`}
+                    >
+                      {task.title}
+                    </p>
+                    {task.due_date && (
+                      <p
+                        className={`text-xs mt-1 ${
+                          task.status === "completed"
+                            ? "text-gray-600"
+                            : isOverdue(task.due_date)
+                            ? "text-red-400"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        📅 {formatDate(task.due_date)}
+                        {isOverdue(task.due_date) &&
+                          task.status !== "completed" && (
+                            <span className="ml-1 text-red-400">• Overdue!</span>
+                          )}
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {/* Edit hint */}
@@ -218,7 +268,6 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         )}
 
-        {/* Edit hint text */}
         {tasks.length > 0 && (
           <p className="text-gray-700 text-xs text-center mt-6">
             Klik pada task untuk edit • Enter untuk save • Esc untuk batal
