@@ -14,6 +14,7 @@ import Help from "./pages/Help";
 import Settings from "./pages/Settings";
 import Sidebar from "./components/Sidebar";
 import { getTasks, updateTask, deleteTask } from "./services/api";
+import NotionPages from "./pages/NotionPages";
 
 export default function App() {
   const [page, setPage] = useState("login");
@@ -100,7 +101,7 @@ export default function App() {
         {activePage === "help" && <Help />}
         {activePage === "settings" && <Settings user={user} />}
         {activePage === "profile" && <Profile user={user} tasks={tasks} onLogout={handleLogout} />}
-        {activePage === "search" && <Search {...sharedProps} />}
+        {activePage === "notes" && <NotionPages />}
       </main>
     </div>
   );

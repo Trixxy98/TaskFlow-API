@@ -11,6 +11,7 @@ const NAV_SECTIONS = [
   {
     label: "MY PAGES",
     items: [
+      { id: "notes", label: "Notes", icon: "📝" },
       { id: "calendar", label: "Calendar", icon: "📅" },
       { id: "completed", label: "Completion", icon: "✓" },
       { id: "tasks", label: "Tasks", icon: "☰" },
