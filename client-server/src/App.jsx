@@ -90,7 +90,7 @@ export default function App() {
 
       <main className="flex-1 overflow-y-auto min-h-screen">
         {activePage === "dashboard" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}
-        {activePage === "projects" && <Projects tasks={tasks} setTasks={setTasks} onUpdateTask={handleUpdateTask} />}
+        {activePage === "projects" && <Projects tasks={tasks} setTasks={setTasks} />}
         {activePage === "calendar" && <CalendarView {...sharedProps} />}
         {activePage === "completed" && <Completed {...sharedProps} />}
         {activePage === "tasks" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}

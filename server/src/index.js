@@ -14,6 +14,9 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/projects", require("./routes/projectRoutes"));
+app.use("/api/team", require("./routes/teamRoutes"));
+app.use("/api/feedback", require("./routes/feedbackRoutes"));
 
 app.get("/", (req, res) => {
   res.json({ message: "🚀 TaskFlow API is running!" });

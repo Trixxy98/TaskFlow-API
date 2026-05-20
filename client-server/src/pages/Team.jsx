@@ -1,21 +1,36 @@
-import { useState } from "react";
-
-const COLORS = ["bg-indigo-200 text-indigo-700", "bg-pink-200 text-pink-700", "bg-amber-200 text-amber-700", "bg-emerald-200 text-emerald-700", "bg-purple-200 text-purple-700"];
+import { useState, useEffect } from "react";
+import { getTeam, inviteMember, removeMember } from "../services/api";
 
 export default function Team({ teamMembers, setTeamMembers, tasks }) {
-  const [showInvite, setShowInvite] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "Member" });
+  const [saving, setSaving] = useState(false);
 
-  const handleInvite = (e) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.email.trim()) return;
-    setTeamMembers([...teamMembers, { id: Date.now(), ...form, color: COLORS[teamMembers.length % COLORS.length] }]);
-    setForm({ name: "", email: "", role: "Member" });
-    setShowInvite(false);
+  useEffect(() => { fetchTeam(); }, []);
+
+  const fetchTeam = async () => {
+    setLoading(true);
+    const res = await getTeam();
+    if (res.success) setTeamMembers(res.data);
+    setLoading(false);
   };
 
-  const handleRemove = (id) => {
-    setTeamMembers(teamMembers.filter((m) => m.id !== id));
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    const res = await inviteMember(form);
+    if (res.success) {
+      setTeamMembers([...teamMembers, res.data]);
+      setForm({ name: "", email: "", role: "Member" });
+      setShowForm(false);
+    }
+    setSaving(false);
+  };
+
+  const handleRemove = async (id) => {
+    const res = await removeMember(id);
+    if (res.success) setTeamMembers(teamMembers.filter((m) => m.id !== id));
   };
 
   return (
@@ -25,60 +40,42 @@ export default function Team({ teamMembers, setTeamMembers, tasks }) {
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Team</h2>
           <p className="text-gray-400 text-sm mt-1">{teamMembers.length} ahli pasukan</p>
         </div>
-        <button
-          onClick={() => setShowInvite(true)}
-          className="bg-gray-900 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-xl transition font-medium"
-        >
+        <button onClick={() => setShowForm(true)} className="bg-gray-900 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-xl transition font-medium">
           + Invite
         </button>
       </div>
 
-      {showInvite && (
+      {showForm && (
         <form onSubmit={handleInvite} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 space-y-3">
           <h3 className="font-semibold text-gray-800 text-sm">Invite Ahli Baru</h3>
-          <input
-            type="text"
-            placeholder="Nama"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400"
-            required
-          />
-          <select
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 bg-white"
-          >
+          <input type="text" placeholder="Nama" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400" required />
+          <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400" required />
+          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 bg-white">
             <option>Member</option>
             <option>Admin</option>
             <option>Viewer</option>
           </select>
           <div className="flex gap-2 pt-1">
-            <button type="submit" className="bg-gray-900 text-white text-xs px-5 py-2 rounded-full transition hover:bg-gray-700 font-medium">
-              Invite
+            <button type="submit" disabled={saving} className="bg-gray-900 text-white text-xs px-5 py-2 rounded-full hover:bg-gray-700 transition font-medium disabled:opacity-50">
+              {saving ? "Loading..." : "Invite"}
             </button>
-            <button type="button" onClick={() => setShowInvite(false)} className="border border-gray-200 text-gray-500 text-xs px-5 py-2 rounded-full transition hover:border-gray-400">
+            <button type="button" onClick={() => setShowForm(false)} className="border border-gray-200 text-gray-500 text-xs px-5 py-2 rounded-full hover:border-gray-400 transition">
               Batal
             </button>
           </div>
         </form>
       )}
 
-      {teamMembers.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" /></div>
+      ) : teamMembers.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-4xl mb-3">👥</p>
           <p className="text-gray-400 text-sm">Belum ada ahli pasukan</p>
-          <button onClick={() => setShowInvite(true)} className="mt-4 text-indigo-500 text-sm hover:underline">
-            Invite ahli pertama
-          </button>
+          <button onClick={() => setShowForm(true)} className="mt-4 text-indigo-500 text-sm hover:underline">Invite ahli pertama</button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -92,12 +89,7 @@ export default function Team({ teamMembers, setTeamMembers, tasks }) {
                 <p className="text-xs text-gray-400">{member.email}</p>
               </div>
               <span className="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full">{member.role}</span>
-              <button
-                onClick={() => handleRemove(member.id)}
-                className="text-gray-200 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm"
-              >
-                ✕
-              </button>
+              <button onClick={() => handleRemove(member.id)} className="text-gray-200 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm">✕</button>
             </div>
           ))}
         </div>
