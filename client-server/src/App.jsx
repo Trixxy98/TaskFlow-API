@@ -6,6 +6,12 @@ import Completed from "./pages/Completed";
 import CalendarView from "./pages/CalendarView";
 import Search from "./pages/Search";
 import Profile from "./pages/Profile";
+import Projects from "./pages/Projects";
+import Feedback from "./pages/Feedback";
+import Team from "./pages/Team";
+import Notifications from "./pages/Notifications";
+import Help from "./pages/Help";
+import Settings from "./pages/Settings";
 import Sidebar from "./components/Sidebar";
 import { getTasks, updateTask, deleteTask } from "./services/api";
 
@@ -14,6 +20,7 @@ export default function App() {
   const [activePage, setActivePage] = useState("dashboard");
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -49,9 +56,14 @@ export default function App() {
   };
 
   const handleDelete = async (id) => {
-    const { deleteTask: del } = await import("./services/api");
-    const res = await del(id);
+    const res = await deleteTask(id);
     if (res.success) setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleUpdateTask = async (id, data) => {
+    const res = await updateTask(id, data);
+    if (res.success) setTasks((prev) => prev.map((t) => (t.id === id ? res.data : t)));
+    return res;
   };
 
   if (!user) {
@@ -63,6 +75,8 @@ export default function App() {
     );
   }
 
+  const sharedProps = { tasks, onToggle: handleToggle, onDelete: handleDelete };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar
@@ -70,29 +84,23 @@ export default function App() {
         onNavigate={setActivePage}
         user={user}
         onLogout={handleLogout}
+        tasks={tasks}
+        teamMembers={teamMembers}
       />
 
-      <main className="flex-1 overflow-y-auto md:ml-0">
-        {activePage === "dashboard" && (
-          <Dashboard
-            user={user}
-            onLogout={handleLogout}
-            tasks={tasks}
-            setTasks={setTasks}
-          />
-        )}
-        {activePage === "completed" && (
-          <Completed tasks={tasks} onToggle={handleToggle} onDelete={handleDelete} />
-        )}
-        {activePage === "calendar" && (
-          <CalendarView tasks={tasks} />
-        )}
-        {activePage === "search" && (
-          <Search tasks={tasks} onToggle={handleToggle} onDelete={handleDelete} />
-        )}
-        {activePage === "profile" && (
-          <Profile user={user} tasks={tasks} onLogout={handleLogout} />
-        )}
+      <main className="flex-1 overflow-y-auto min-h-screen">
+        {activePage === "dashboard" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}
+        {activePage === "projects" && <Projects tasks={tasks} setTasks={setTasks} onUpdateTask={handleUpdateTask} />}
+        {activePage === "calendar" && <CalendarView {...sharedProps} />}
+        {activePage === "completed" && <Completed {...sharedProps} />}
+        {activePage === "tasks" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}
+        {activePage === "feedback" && <Feedback tasks={tasks} user={user} />}
+        {activePage === "team" && <Team teamMembers={teamMembers} setTeamMembers={setTeamMembers} tasks={tasks} />}
+        {activePage === "notifications" && <Notifications tasks={tasks} />}
+        {activePage === "help" && <Help />}
+        {activePage === "settings" && <Settings user={user} />}
+        {activePage === "profile" && <Profile user={user} tasks={tasks} onLogout={handleLogout} />}
+        {activePage === "search" && <Search {...sharedProps} />}
       </main>
     </div>
   );
