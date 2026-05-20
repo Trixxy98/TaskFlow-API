@@ -263,4 +263,8 @@ Made with ❤️ using React + Node.js + MySQL
 
 ⭐ **Star this repo if you find it useful!**
 
+<<<<<<< HEAD
 </div>
+=======
+</div>
+>>>>>>> fad6e13 (feat: complete all pages with database integration (projects, team, feedback, calendar))
