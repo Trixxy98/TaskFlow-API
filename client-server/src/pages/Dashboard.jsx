@@ -7,8 +7,7 @@ const PRIORITY_CONFIG = {
   low:    { label: "Low",    color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200" },
 };
 
-export default function Dashboard({ user, onLogout }) {
-  const [tasks, setTasks] = useState([]);
+export default function Dashboard({ user, onLogout, tasks, setTasks }) {
   const [filter, setFilter] = useState("all");
   const [newTask, setNewTask] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
@@ -20,7 +19,7 @@ export default function Dashboard({ user, onLogout }) {
   const [editingPriority, setEditingPriority] = useState("medium");
   const editRef = useRef(null);
 
-  useEffect(() => { fetchTasks(); }, []);
+  useEffect(() => { setLoading(false); }, [tasks]);
   useEffect(() => {
     if (editingId && editRef.current) editRef.current.focus();
   }, [editingId]);
