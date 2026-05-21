@@ -1,4 +1,6 @@
 import { useState } from "react";
+import useTheme from "../hooks/UseTheme";
+
 
 const NAV_SECTIONS = [
   {
@@ -29,10 +31,10 @@ const NAV_SECTIONS = [
   },
 ];
 
-export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks, teamMembers }) {
+export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks, teamMembers, theme, setTheme }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState("light");
+  
 
   const projectCount = [...new Set(tasks.map((t) => t.project).filter(Boolean))].length;
   const feedbackCount = tasks.filter((t) => t.feedback).length;
@@ -67,7 +69,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
 
       {/* Sidebar */}
       <aside className={`
-        fixed md:sticky top-0 h-screen z-40 bg-white border-r border-gray-100
+  fixed md:sticky top-0 h-screen z-40 bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-gray-800
         flex flex-col transition-all duration-300 overflow-y-auto
         ${collapsed ? "md:w-16" : "md:w-60"}
         ${mobileOpen ? "left-0 w-64" : "-left-64 md:left-0"}
@@ -79,7 +81,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
               <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center">
                 <span className="text-black text-xl font-bold">✦</span>
               </div>
-              <span className="text-base font-semibold text-gray-900">TaskFlow</span>
+              <span className="text-base font-semibold text-gray-900 dark:text-white">TaskFlow</span>
             </div>
           )}
           {collapsed && (
@@ -100,7 +102,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
               {!collapsed && (
-                <p className="text-xs font-semibold text-gray-400 px-2 mb-2 tracking-wider">
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 px-2 mb-2 tracking-wider">
                   {section.label}
                 </p>
               )}
@@ -113,8 +115,8 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
                       onClick={() => { onNavigate(item.id); setMobileOpen(false); }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         activePage === item.id
-                          ? "bg-gray-100 text-gray-900"
-                          : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                          ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                          : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-800 dark:hover:text-white"
                       }`}
                     >
                       <span className="text-base flex-shrink-0">{item.icon}</span>
@@ -177,23 +179,23 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
                 <span className="text-white text-xs font-bold">{user.name.charAt(0).toUpperCase()}</span>
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-gray-800 truncate">{user.name}</p>
-                <p className="text-xs text-gray-400 truncate">{user.email}</p>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{user.name}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>
               </div>
             </div>
           )}
 
           {/* Theme toggle */}
           {!collapsed && (
-            <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1">
               {["Dark", "Light", "System"].map((t) => (
                 <button
                   key={t}
                   onClick={() => setTheme(t.toLowerCase())}
                   className={`flex-1 text-xs py-1.5 rounded-lg font-medium transition ${
                     theme === t.toLowerCase()
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-400 hover:text-gray-600"
+                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   }`}
                 >
                   {t}

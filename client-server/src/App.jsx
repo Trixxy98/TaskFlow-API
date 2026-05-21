@@ -16,6 +16,7 @@ import Sidebar from "./components/Sidebar";
 import { getTasks, updateTask, deleteTask } from "./services/api";
 import NotionPages from "./pages/NotionPages";
 import Kanban from "./pages/Kanban";
+import useTheme from "./hooks/useTheme";
 
 export default function App() {
   const [page, setPage] = useState("login");
@@ -23,6 +24,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
+  const { theme, setTheme } = useTheme();
+
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -80,17 +83,19 @@ export default function App() {
   const sharedProps = { tasks, onToggle: handleToggle, onDelete: handleDelete };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Sidebar
-        activePage={activePage}
-        onNavigate={setActivePage}
-        user={user}
-        onLogout={handleLogout}
-        tasks={tasks}
-        teamMembers={teamMembers}
-      />
+  activePage={activePage}
+  onNavigate={setActivePage}
+  user={user}
+  onLogout={handleLogout}
+  tasks={tasks}
+  teamMembers={teamMembers}
+  theme={theme}
+  setTheme={setTheme}
+/>
 
-      <main className="flex-1 overflow-y-auto min-h-screen">
+      <main className="flex-1 overflow-y-auto min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
         {activePage === "dashboard" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}
         {activePage === "projects" && <Projects tasks={tasks} setTasks={setTasks} />}
         {activePage === "calendar" && <CalendarView {...sharedProps} />}
