@@ -138,8 +138,8 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
       return order[a.priority] - order[b.priority];
     });
 
-  return (
-    <div className="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
+    return (
+      <div className="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
       {/* Greeting */}
       <div className="mb-6">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Hello, {user.name} 👋</h2>
@@ -161,10 +161,10 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Total", value: tasks.length, color: "text-gray-900", bg: "bg-white" },
-          { label: "Pending", value: pendingCount, color: "text-amber-500", bg: "bg-amber-50" },
-          { label: "Selesai", value: completedCount, color: "text-emerald-500", bg: "bg-emerald-50" },
-          { label: "Overdue", value: tasks.filter((t) => t.due_date && isOverdue(t.due_date) && t.status !== "completed").length, color: "text-red-500", bg: "bg-red-50" },
+          { label: "Total", value: tasks.length, color: "text-gray-900 dark:text-white", bg: "bg-white dark:bg-gray-900" },
+          { label: "Pending", value: pendingCount, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
+          { label: "Selesai", value: completedCount, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+          { label: "Overdue", value: tasks.filter((t) => t.due_date && isOverdue(t.due_date) && t.status !== "completed").length, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
         ].map((stat) => (
           <div key={stat.label} className={`${stat.bg} rounded-2xl border border-gray-100 p-4 shadow-sm`}>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -195,13 +195,13 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
       {activeTab === "tasks" && (
         <>
           {/* Add Task */}
-          <form onSubmit={handleCreate} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5">
+          <form onSubmit={handleCreate} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-5">
             <input
               type="text"
               placeholder="Apa yang perlu dibuat?"
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
-              className="w-full text-gray-800 placeholder-gray-300 text-sm outline-none mb-3 bg-transparent"
+              className="w-full text-gray-800 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600 text-sm outline-none mb-3 bg-transparent"
             />
             <div className="flex items-center gap-2 flex-wrap">
               <input
