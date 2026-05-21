@@ -6,6 +6,7 @@ const NAV_SECTIONS = [
     items: [
       { id: "dashboard", label: "Dashboard", icon: "⊞" },
       { id: "projects", label: "Projects", icon: "⊟", badge: null },
+      { id: "kanban", label: "Kanban", icon: "⊞" },
     ],
   },
   {
