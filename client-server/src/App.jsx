@@ -17,6 +17,7 @@ import { getTasks, updateTask, deleteTask } from "./services/api";
 import NotionPages from "./pages/NotionPages";
 import Kanban from "./pages/Kanban";
 import useTheme from "./hooks/useTheme";
+import TableView from "./pages/TableView";
 
 export default function App() {
   const [page, setPage] = useState("login");
@@ -109,6 +110,7 @@ export default function App() {
         {activePage === "profile" && <Profile user={user} tasks={tasks} onLogout={handleLogout} />}
         {activePage === "notes" && <NotionPages />}
         {activePage === "kanban" && <Kanban tasks={tasks} setTasks={setTasks} />}
+        {activePage === "table" && <TableView tasks={tasks} setTasks={setTasks} />}
       </main>
     </div>
   );

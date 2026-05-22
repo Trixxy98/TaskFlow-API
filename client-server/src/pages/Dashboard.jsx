@@ -232,7 +232,7 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
-                  filter === f ? "bg-gray-900 text-white" : "bg-white text-gray-400 hover:text-gray-700 border border-gray-200"
+                  filter === f ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-white dark:bg-gray-900 text-gray-400 hover:text-gray-700 border border-gray-200 dark:border-gray-700"
                 }`}
               >
                 {f === "all" ? "Semua" : f === "pending" ? "Pending" : "Selesai"}
@@ -255,7 +255,7 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
               {filteredTasks.map((task) => {
                 const p = PRIORITY_CONFIG[task.priority || "medium"];
                 return (
-                  <div key={task.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-4 flex items-start gap-3 group shadow-sm hover:shadow-md transition-shadow">
+                  <div key={task.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 px-4 py-4 flex items-start gap-3 group shadow-sm hover:shadow-md transition-shadow">
                     <button
                       onClick={() => handleToggle(task)}
                       className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
@@ -299,7 +299,7 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
                         </div>
                       ) : (
                         <div onClick={() => task.status !== "completed" && startEdit(task)} className="cursor-pointer">
-                          <p className={`text-sm ${task.status === "completed" ? "line-through text-gray-300" : "text-gray-800 hover:text-gray-500"}`}>
+                          <p className={`text-sm ${task.status === "completed" ? "line-through text-gray-500" : "text-gray-800 dark:text-gray-100 hover:text-gray-500"}`}>
                             {task.title}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mt-1.5">

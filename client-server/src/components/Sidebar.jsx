@@ -9,6 +9,7 @@ const NAV_SECTIONS = [
       { id: "dashboard", label: "Dashboard", icon: "⊞" },
       { id: "projects", label: "Projects", icon: "⊟", badge: null },
       { id: "kanban", label: "Kanban", icon: "⊞" },
+      { id: "table", label: "Table View", icon: "⊟" },
     ],
   },
   {
