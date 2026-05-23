@@ -4,12 +4,52 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import Attachments from "../components/Attachments";
+import { getAttachments } from "../services/api";
 
 const PRIORITY_CONFIG = {
   high:   { label: "High",   color: "text-red-500",    bg: "bg-red-50",    border: "border-red-200"   },
   medium: { label: "Medium", color: "text-amber-500",  bg: "bg-amber-50",  border: "border-amber-200" },
   low:    { label: "Low",    color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200" },
 };
+
+function TaskAttachmentPreview({ taskId }) {
+  const [attachments, setAttachments] = useState([]);
+
+  useEffect(() => {
+    getAttachments(taskId).then((res) => {
+      if (res.success) setAttachments(res.data);
+    });
+  }, [taskId]);
+
+  if (attachments.length === 0) return null;
+
+  const images = attachments.filter((a) => a.mimetype.startsWith("image/"));
+  const pdfs = attachments.filter((a) => a.mimetype === "application/pdf");
+
+  return (
+    <div className="mt-2 flex items-center gap-2 flex-wrap">
+      {images.map((att) => (
+        <a key={att.id} href={`http://localhost:3001${att.url}`} target="_blank" rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}>
+          <img
+            src={`http://localhost:3001${att.url}`}
+            alt={att.originalname}
+            className="w-14 h-14 rounded-lg object-cover border border-gray-100 dark:border-gray-700 hover:opacity-80 transition"
+          />
+        </a>
+      ))}
+      {pdfs.map((att) => (
+        <a key={att.id} href={`http://localhost:3001${att.url}`} target="_blank" rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 text-xs px-3 py-2 rounded-lg hover:opacity-80 transition border border-red-100 dark:border-red-900/30">
+          <span>📄</span>
+          <span className="truncate max-w-24">{att.originalname}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
 
 export default function Dashboard({ user, onLogout, tasks, setTasks }) {
   const [filter, setFilter] = useState("all");
@@ -293,13 +333,15 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
                             </select>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => handleEditSave(task)} className="bg-gray-900 hover:bg-gray-700 text-white text-xs px-4 py-1.5 rounded-full transition">✓ Save</button>
-                            <button onClick={() => setEditingId(null)} className="border border-gray-200 hover:border-gray-400 text-gray-500 text-xs px-4 py-1.5 rounded-full transition">Batal</button>
+                              <button onClick={() => handleEditSave(task)} className="bg-gray-900 hover:bg-gray-700 text-white text-xs px-4 py-1.5 rounded-full transition">✓ Save</button>
+                              <button onClick={() => setEditingId(null)} className="border border-gray-200 hover:border-gray-400 text-gray-500 text-xs px-4 py-1.5 rounded-full transition">Batal</button>
                           </div>
+                              <Attachments taskId={task.id} />
                         </div>
                       ) : (
+                        <div>
                         <div onClick={() => task.status !== "completed" && startEdit(task)} className="cursor-pointer">
-                          <p className={`text-sm ${task.status === "completed" ? "line-through text-gray-500" : "text-gray-800 dark:text-gray-100 hover:text-gray-500"}`}>
+                          <p className={`text-sm ${task.status === "completed" ? "line-through text-gray-300" : "text-gray-800 dark:text-gray-100 hover:text-gray-500"}`}>
                             {task.title}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -312,6 +354,8 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
                             )}
                           </div>
                         </div>
+                        <Attachments taskId={task.id} />
+                      </div>
                       )}
                     </div>
 
