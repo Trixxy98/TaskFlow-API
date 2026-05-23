@@ -77,3 +77,27 @@ export const deleteFeedback = async (id) => {
   const res = await fetch(`${API_URL}/feedback/${id}`, { method: "DELETE", headers: headers() });
   return res.json();
 };
+
+export const getAttachments = async (taskId) => {
+  const res = await fetch(`${API_URL}/upload/${taskId}`, { headers: headers() });
+  return res.json();
+};
+
+export const uploadFile = async (taskId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API_URL}/upload/${taskId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getToken()}` },
+    body: formData,
+  });
+  return res.json();
+};
+
+export const deleteAttachment = async (id) => {
+  const res = await fetch(`${API_URL}/upload/file/${id}`, {
+    method: "DELETE",
+    headers: headers(),
+  });
+  return res.json();
+};
