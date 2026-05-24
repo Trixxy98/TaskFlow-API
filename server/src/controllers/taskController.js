@@ -21,14 +21,14 @@ const getAllTasks = async (req, res) => {
 const createTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { title, description, due_date, priority } = req.body;
+    const { title, description, due_date, priority, kanban_status } = req.body;
     if (!title)
       return res.status(400).json({ success: false, message: "Title diperlukan" });
 
-      const [result] = await db.query(
-        "INSERT INTO tasks (user_id, title, description, due_date, priority) VALUES (?, ?, ?, ?, ?)",
-        [userId, title, description || null, due_date || null, priority || "medium"]
-      );
+    const [result] = await db.query(
+      "INSERT INTO tasks (user_id, title, description, due_date, priority, kanban_status) VALUES (?, ?, ?, ?, ?, ?)",
+      [userId, title, description || null, due_date || null, priority || "medium", kanban_status || "todo"]
+    );
     const [newTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
     res.status(201).json({ success: true, message: "Task berjaya dicipta", data: newTask[0] });
   } catch (error) {
@@ -40,7 +40,7 @@ const updateTask = async (req, res) => {
   try {
     const userId = req.user.id;
     const taskId = req.params.id;
-    const { title, description, status, due_date, priority } = req.body;
+    const { title, description, status, due_date, priority, kanban_status } = req.body;
 
     const [rows] = await db.query(
       "SELECT * FROM tasks WHERE id = ? AND user_id = ?",
@@ -54,13 +54,14 @@ const updateTask = async (req, res) => {
     const current = rows[0];
 
     await db.query(
-      "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, priority = ? WHERE id = ?",
+      "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, priority = ?, kanban_status = ? WHERE id = ?",
       [
         title || current.title,
         description !== undefined ? description : current.description,
         status || current.status,
         due_date !== undefined ? due_date : current.due_date,
         priority || current.priority,
+        kanban_status !== undefined ? kanban_status : current.kanban_status,
         taskId,
       ]
     );
