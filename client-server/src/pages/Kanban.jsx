@@ -16,19 +16,19 @@ import { CSS } from "@dnd-kit/utilities";
 import { updateTask } from "../services/api";
 
 const COLUMNS = [
-  { id: "pending",     label: "To Do",       color: "bg-gray-100",    dot: "bg-gray-400"    },
-  { id: "inprogress",  label: "In Progress",  color: "bg-blue-50",     dot: "bg-blue-400"    },
-  { id: "completed",   label: "Completed",    color: "bg-emerald-50",  dot: "bg-emerald-400" },
+  { id: "todo",       label: "To Do",       color: "bg-gray-100 dark:bg-gray-900",     dot: "bg-gray-400"    },
+  { id: "inprogress", label: "In Progress",  color: "bg-blue-50 dark:bg-blue-950/30",   dot: "bg-blue-400"    },
+  { id: "completed",  label: "Completed",    color: "bg-emerald-50 dark:bg-emerald-950/30", dot: "bg-emerald-400" },
 ];
 
 const PRIORITY_CONFIG = {
-  high:   { color: "text-red-500",    bg: "bg-red-50"    },
-  medium: { color: "text-amber-500",  bg: "bg-amber-50"  },
-  low:    { color: "text-emerald-500", bg: "bg-emerald-50" },
+  high:   { color: "text-red-500",    bg: "bg-red-50 dark:bg-red-900/20"    },
+  medium: { color: "text-amber-500",  bg: "bg-amber-50 dark:bg-amber-900/20"  },
+  low:    { color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
 };
 
-function TaskCard({ task, isDragging }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id });
+function TaskCard({ task }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const p = PRIORITY_CONFIG[task.priority || "medium"];
 
   const style = {
@@ -54,20 +54,20 @@ function TaskCard({ task, isDragging }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 cursor-grab active:cursor-grabbing select-none hover:shadow-md transition-shadow"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 cursor-grab active:cursor-grabbing select-none hover:shadow-md transition-shadow"
     >
-      <p className="text-sm text-gray-800 font-medium mb-2 leading-snug">{task.title}</p>
+      <p className="text-sm text-gray-800 dark:text-gray-100 font-medium mb-2 leading-snug">{task.title}</p>
       <div className="flex items-center gap-2 flex-wrap">
         <span className={`text-xs px-2 py-0.5 rounded-full ${p.bg} ${p.color}`}>
           {task.priority || "medium"}
         </span>
         {task.due_date && (
-          <span className={`text-xs ${isOverdue(task.due_date) && task.status !== "completed" ? "text-red-400" : "text-gray-400"}`}>
+          <span className={`text-xs ${isOverdue(task.due_date) && task.kanban_status !== "completed" ? "text-red-400" : "text-gray-400"}`}>
             📅 {formatDate(task.due_date)}
           </span>
         )}
         {task.project && (
-          <span className="text-xs text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
+          <span className="text-xs text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-full">
             {task.project}
           </span>
         )}
@@ -77,38 +77,38 @@ function TaskCard({ task, isDragging }) {
 }
 
 function Column({ column, tasks }) {
-    const { setNodeRef } = useSortable({ id: column.id });
-  
-    return (
-      <div
-        ref={setNodeRef}
-        id={column.id}
-        className={`${column.color} rounded-2xl p-4 flex flex-col min-h-96`}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`w-2 h-2 rounded-full ${column.dot}`} />
-          <h3 className="text-sm font-semibold text-gray-700">{column.label}</h3>
-          <span className="ml-auto text-xs font-medium text-gray-400 bg-white px-2 py-0.5 rounded-full">
-            {tasks.length}
-          </span>
-        </div>
-  
-        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-2 flex-1 min-h-16">
-            {tasks.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl">
-                <p className="text-xs text-gray-300">Drop task di sini</p>
-              </div>
-            ) : (
-              tasks.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))
-            )}
-          </div>
-        </SortableContext>
+  const { setNodeRef } = useSortable({ id: column.id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      id={column.id}
+      className={`${column.color} rounded-2xl p-4 flex flex-col min-h-96`}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <div className={`w-2 h-2 rounded-full ${column.dot}`} />
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{column.label}</h3>
+        <span className="ml-auto text-xs font-medium text-gray-400 bg-white dark:bg-gray-800 px-2 py-0.5 rounded-full">
+          {tasks.length}
+        </span>
       </div>
-    );
-  }
+
+      <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-2 flex-1 min-h-16">
+          {tasks.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+              <p className="text-xs text-gray-300 dark:text-gray-600">Drop task di sini</p>
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <TaskCard key={task.id} task={task} />
+            ))
+          )}
+        </div>
+      </SortableContext>
+    </div>
+  );
+}
 
 export default function Kanban({ tasks, setTasks }) {
   const [activeTask, setActiveTask] = useState(null);
@@ -117,19 +117,18 @@ export default function Kanban({ tasks, setTasks }) {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  // Map tasks ke columns — inprogress = high priority pending
+  // Guna kanban_status untuk tentukan column — bukan priority!
   const getColumnTasks = (columnId) => {
-    if (columnId === "completed") return tasks.filter((t) => t.status === "completed");
-    if (columnId === "inprogress") return tasks.filter((t) => t.status === "pending" && t.priority === "high");
-    return tasks.filter((t) => t.status === "pending" && t.priority !== "high");
+    return tasks.filter((t) => {
+      const ks = t.kanban_status || (t.status === "completed" ? "completed" : "todo");
+      return ks === columnId;
+    });
   };
 
   const findTaskColumn = (taskId) => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return null;
-    if (task.status === "completed") return "completed";
-    if (task.status === "pending" && task.priority === "high") return "inprogress";
-    return "pending";
+    return task.kanban_status || (task.status === "completed" ? "completed" : "todo");
   };
 
   const handleDragStart = ({ active }) => {
@@ -139,64 +138,50 @@ export default function Kanban({ tasks, setTasks }) {
   const handleDragEnd = async ({ active, over }) => {
     setActiveTask(null);
     if (!over) return;
-  
+
     const activeId = active.id;
     const overId = over.id;
-  
     const activeColumn = findTaskColumn(activeId);
-  
-    // Cari target column — sama ada drop atas column terus atau atas task lain
-    let targetColumn = null;
-  
-    // Check kalau drop atas column id
-    if (COLUMNS.find((c) => c.id === overId)) {
-      targetColumn = overId;
-    } else {
-      // Drop atas task — cari column task tu
-      targetColumn = findTaskColumn(overId);
-    }
-  
+
+    // Tentukan target column
+    let targetColumn = COLUMNS.find((c) => c.id === overId)?.id || findTaskColumn(overId);
+
     if (!targetColumn || activeColumn === targetColumn) return;
-  
+
     const task = tasks.find((t) => t.id === activeId);
     if (!task) return;
-  
-    let newStatus = task.status;
-    let newPriority = task.priority || "medium";
-  
-    if (targetColumn === "completed") {
-      newStatus = "completed";
-    } else if (targetColumn === "inprogress") {
-      newStatus = "pending";
-      newPriority = "high";
-    } else if (targetColumn === "pending") {
-      newStatus = "pending";
-      if (newPriority === "high") newPriority = "medium";
-    }
-  
-    // Optimistic update
+
+    // Update status ikut column — JANGAN tukar priority!
+    const newStatus = targetColumn === "completed" ? "completed" : "pending";
+
+    // Optimistic update — hanya tukar kanban_status dan status, priority KEKAL sama
     setTasks((prev) =>
       prev.map((t) =>
-        t.id === activeId ? { ...t, status: newStatus, priority: newPriority } : t
+        t.id === activeId
+          ? { ...t, kanban_status: targetColumn, status: newStatus }
+          : t
       )
     );
-  
-    await updateTask(activeId, { status: newStatus, priority: newPriority });
+
+    // API — hantar kanban_status dan status je, priority tak dihantar
+    await updateTask(activeId, {
+      kanban_status: targetColumn,
+      status: newStatus,
+    });
   };
 
-  const pendingCount = tasks.filter((t) => t.status === "pending").length;
-  const completedCount = tasks.filter((t) => t.status === "completed").length;
+  const completedCount = tasks.filter((t) => (t.kanban_status || "todo") === "completed").length;
   const progress = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
 
   return (
     <div className="flex-1 p-4 md:p-8 w-full">
       <div className="mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Kanban Board</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Kanban Board</h2>
         <p className="text-gray-400 text-sm mt-1">Drag & drop tasks untuk tukar status</p>
 
         {tasks.length > 0 && (
           <div className="mt-3 flex items-center gap-4">
-            <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+            <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
               <div
                 className="bg-indigo-500 h-1.5 rounded-full transition-all duration-700"
                 style={{ width: `${progress}%` }}
@@ -208,31 +193,31 @@ export default function Kanban({ tasks, setTasks }) {
       </div>
 
       <DndContext
-  sensors={sensors}
-  collisionDetection={closestCorners}
-  onDragStart={handleDragStart}
-  onDragEnd={handleDragEnd}
->
-  <SortableContext items={COLUMNS.map((c) => c.id)}>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {COLUMNS.map((column) => (
-        <Column
-          key={column.id}
-          column={column}
-          tasks={getColumnTasks(column.id)}
-        />
-      ))}
-    </div>
-  </SortableContext>
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={COLUMNS.map((c) => c.id)}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {COLUMNS.map((column) => (
+              <Column
+                key={column.id}
+                column={column}
+                tasks={getColumnTasks(column.id)}
+              />
+            ))}
+          </div>
+        </SortableContext>
 
-  <DragOverlay>
-    {activeTask && (
-      <div className="bg-white rounded-xl border border-indigo-200 shadow-xl p-3 rotate-2 opacity-95">
-        <p className="text-sm text-gray-800 font-medium">{activeTask.title}</p>
-      </div>
-    )}
-  </DragOverlay>
-</DndContext>
+        <DragOverlay>
+          {activeTask && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-indigo-200 shadow-xl p-3 rotate-2 opacity-95">
+              <p className="text-sm text-gray-800 dark:text-gray-100 font-medium">{activeTask.title}</p>
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
 
       {tasks.length === 0 && (
         <div className="text-center py-20">
