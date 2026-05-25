@@ -32,7 +32,7 @@ const NAV_SECTIONS = [
   },
 ];
 
-export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks, teamMembers, theme, setTheme }) {
+export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks, teamMembers, theme, setTheme, unreadCount }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   
@@ -44,7 +44,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
   const getBadge = (id) => {
     if (id === "projects") return projectCount || null;
     if (id === "feedback") return feedbackCount || null;
-    if (id === "notifications") return notifCount || null;
+    if (id === "notifications") return unreadCount || null;
     return null;
   };
 

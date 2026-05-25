@@ -25,6 +25,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { theme, setTheme } = useTheme();
 
 
@@ -94,6 +95,7 @@ export default function App() {
   teamMembers={teamMembers}
   theme={theme}
   setTheme={setTheme}
+  unreadCount={unreadCount}
 />
 
       <main className="flex-1 overflow-y-auto min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
@@ -104,7 +106,7 @@ export default function App() {
         {activePage === "tasks" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}
         {activePage === "feedback" && <Feedback tasks={tasks} user={user} />}
         {activePage === "team" && <Team teamMembers={teamMembers} setTeamMembers={setTeamMembers} tasks={tasks} />}
-        {activePage === "notifications" && <Notifications tasks={tasks} />}
+        {activePage === "notifications" && <Notifications tasks={tasks} onUnreadChange={setUnreadCount} />}
         {activePage === "help" && <Help />}
         {activePage === "settings" && <Settings user={user} />}
         {activePage === "profile" && <Profile user={user} tasks={tasks} onLogout={handleLogout} />}
