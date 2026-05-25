@@ -19,6 +19,7 @@ app.use("/api/projects", require("./routes/projectRoutes"));
 app.use("/api/team", require("./routes/teamRoutes"));
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/uploads", (req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   next();

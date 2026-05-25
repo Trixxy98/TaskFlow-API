@@ -56,7 +56,11 @@ export const getTeam = async () => {
   return res.json();
 };
 export const inviteMember = async (data) => {
-  const res = await fetch(`${API_URL}/team`, { method: "POST", headers: headers(), body: JSON.stringify(data) });
+  const res = await fetch(`${API_URL}/team/invite`, { method: "POST", headers: headers(), body: JSON.stringify(data) });
+  return res.json();
+};
+export const updateMemberRole = async (id, role) => {
+  const res = await fetch(`${API_URL}/team/${id}/role`, { method: "PATCH", headers: headers(), body: JSON.stringify({ role }) });
   return res.json();
 };
 export const removeMember = async (id) => {
@@ -99,5 +103,23 @@ export const deleteAttachment = async (id) => {
     method: "DELETE",
     headers: headers(),
   });
+  return res.json();
+};
+
+// Notifications
+export const getNotifications = async () => {
+  const res = await fetch(`${API_URL}/notifications`, { headers: headers() });
+  return res.json();
+};
+export const markNotificationRead = async (id) => {
+  const res = await fetch(`${API_URL}/notifications/${id}/read`, { method: "PATCH", headers: headers() });
+  return res.json();
+};
+export const markAllRead = async () => {
+  const res = await fetch(`${API_URL}/notifications/read-all`, { method: "PATCH", headers: headers() });
+  return res.json();
+};
+export const deleteNotification = async (id) => {
+  const res = await fetch(`${API_URL}/notifications/${id}`, { method: "DELETE", headers: headers() });
   return res.json();
 };
