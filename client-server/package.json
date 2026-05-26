@@ -22,9 +22,12 @@
     "@tiptap/pm": "^3.23.5",
     "@tiptap/react": "^3.23.5",
     "@tiptap/starter-kit": "^3.23.5",
+    "@tiptap/suggestion": "^3.23.5",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "recharts": "^3.8.1"
+    "react-is": "^19.2.6",
+    "recharts": "^3.8.1",
+    "tippy.js": "^6.3.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

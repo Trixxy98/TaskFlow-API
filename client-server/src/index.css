@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import 'tippy.js/dist/tippy.css';
+
 @variant dark (&:where(.dark, .dark *));
 
 /* Tiptap Editor Styles */
