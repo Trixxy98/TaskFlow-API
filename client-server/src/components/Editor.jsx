@@ -4,6 +4,7 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Placeholder from "@tiptap/extension-placeholder";
+import SlashCommands from "./SlashCommands";
 
 const ToolbarButton = ({ onClick, active, title, children }) => (
   <button
@@ -25,6 +26,7 @@ export default function Editor({ content, onChange, placeholder = "Mula taip di 
       TextStyle,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder }),
+      SlashCommands,
     ],
     content,
     onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
