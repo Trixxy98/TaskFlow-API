@@ -2,22 +2,52 @@ import { useState } from "react";
 import { registerUser } from "../services/api";
 
 export default function Register({ goToLogin }) {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
     setSuccess("");
 
-    const res = await registerUser(form);
+    if (form.password.length < 8) {
+      setError("Password mesti sekurang-kurangnya 8 aksara.");
+      return;
+    }
+
+    if (!/[A-Z]/.test(form.password)) {
+      setError("Password mesti ada sekurang-kurangnya 1 huruf besar (A-Z).");
+      return;
+    }
+
+    if (!/[0-9]/.test(form.password)) {
+      setError("Password mesti ada sekurang-kurangnya 1 nombor.");
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(form.password)) {
+      setError("Password mesti ada sekurang-kurangnya 1 simbol khas (contoh: !@#$).");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError("Confirmation password tidak sama dengan password.");
+      return;
+    }
+
+    setLoading(true);
+
+    const res = await registerUser({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+    });
 
     if (res.success) {
       setSuccess("Akaun berjaya didaftarkan! Sila log masuk.");
-      setForm({ name: "", email: "", password: "" });
+      setForm({ name: "", email: "", password: "", confirmPassword: "" });
     } else {
       setError(res.message);
     }
@@ -77,6 +107,21 @@ export default function Register({ goToLogin }) {
               placeholder="••••••••"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full border border-gray-200 text-gray-800 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gray-400 transition"
+              required
+            />
+            <p className="text-[11px] text-gray-400 mt-1.5">
+              Minimum 8 aksara, ada huruf besar, nombor, dan simbol khas.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5 font-medium">Confirm Password</label>
+            <input
+              type="password"
+              placeholder="Ulang semula password"
+              value={form.confirmPassword}
+              onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
               className="w-full border border-gray-200 text-gray-800 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gray-400 transition"
               required
             />
