@@ -8,9 +8,9 @@ import Attachments from "../components/Attachments";
 import { getAttachments } from "../services/api";
 
 const PRIORITY_CONFIG = {
-  high:   { label: "High",   color: "text-red-500",    bg: "bg-red-50",    border: "border-red-200"   },
-  medium: { label: "Medium", color: "text-amber-500",  bg: "bg-amber-50",  border: "border-amber-200" },
-  low:    { label: "Low",    color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200" },
+  high:   { label: "High",   color: "text-red-500",    bg: "bg-red-50 dark:bg-red-900/20",    border: "border-red-200 dark:border-red-800"   },
+  medium: { label: "Medium", color: "text-amber-500",  bg: "bg-amber-50 dark:bg-amber-900/20",  border: "border-amber-200 dark:border-amber-800" },
+  low:    { label: "Low",    color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-200 dark:border-emerald-800" },
 };
 
 function TaskAttachmentPreview({ taskId }) {
@@ -182,16 +182,16 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
       <div className="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
       {/* Greeting */}
       <div className="mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Hello, {user.name} 👋</h2>
-        <p className="text-gray-400 text-sm mt-1">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Hello, {user.name} 👋</h2>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
           {tasks.length === 0 ? "Tiada task lagi. Mula tambah sekarang!" : `${completedCount} daripada ${tasks.length} task selesai`}
         </p>
         {tasks.length > 0 && (
           <div className="mt-3">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mb-1">
               <span>Overall Progress</span><span>{progress}%</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-1.5">
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
               <div className="bg-indigo-500 h-1.5 rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
             </div>
           </div>
@@ -206,9 +206,9 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
           { label: "Selesai", value: completedCount, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
           { label: "Overdue", value: tasks.filter((t) => t.due_date && isOverdue(t.due_date) && t.status !== "completed").length, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
         ].map((stat) => (
-          <div key={stat.label} className={`${stat.bg} rounded-2xl border border-gray-100 p-4 shadow-sm`}>
+          <div key={stat.label} className={`${stat.bg} rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm dark:shadow-none`}>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-gray-400 text-xs mt-1">{stat.label}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -223,7 +223,7 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${
-              activeTab === tab.id ? "bg-gray-900 text-white" : "bg-white text-gray-400 hover:text-gray-700 border border-gray-200"
+              activeTab === tab.id ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 border border-gray-200 dark:border-gray-700"
             }`}
           >
             {tab.label}
@@ -248,18 +248,18 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
                 type="date"
                 value={newDueDate}
                 onChange={(e) => setNewDueDate(e.target.value)}
-                className="text-xs text-gray-400 border border-gray-200 rounded-full px-3 py-1.5 outline-none focus:border-gray-400 bg-transparent"
+                className="text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 outline-none focus:border-gray-400 dark:focus:border-gray-500 bg-transparent"
               />
               <select
                 value={newPriority}
                 onChange={(e) => setNewPriority(e.target.value)}
-                className="text-xs text-gray-400 border border-gray-200 rounded-full px-3 py-1.5 outline-none focus:border-gray-400 bg-transparent"
+                className="text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 outline-none focus:border-gray-400 dark:focus:border-gray-500 bg-transparent"
               >
                 <option value="high">🔴 High</option>
                 <option value="medium">🟡 Medium</option>
                 <option value="low">🟢 Low</option>
               </select>
-              <button type="submit" className="ml-auto bg-gray-900 hover:bg-gray-700 text-white text-xs px-5 py-1.5 rounded-full transition font-medium">
+              <button type="submit" className="ml-auto bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-5 py-1.5 rounded-full transition font-medium">
                 + Tambah
               </button>
             </div>
@@ -283,7 +283,7 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
           {/* Task List */}
           {loading ? (
             <div className="text-center py-16">
-              <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto" />
+              <div className="w-6 h-6 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-blue-500 rounded-full animate-spin mx-auto" />
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="text-center py-16">
@@ -313,19 +313,19 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
                             value={editingTitle}
                             onChange={(e) => setEditingTitle(e.target.value)}
                             onKeyDown={(e) => handleEditKeyDown(e, task)}
-                            className="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-sm outline-none focus:border-gray-400"
+                            className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 rounded-xl px-3 py-1.5 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500"
                           />
                           <div className="flex gap-2 flex-wrap">
                             <input
                               type="date"
                               value={editingDueDate}
                               onChange={(e) => setEditingDueDate(e.target.value)}
-                              className="text-xs border border-gray-200 rounded-full px-3 py-1 outline-none focus:border-gray-400"
+                              className="text-xs border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-600 dark:text-gray-300 rounded-full px-3 py-1 outline-none focus:border-gray-400 dark:focus:border-gray-500"
                             />
                             <select
                               value={editingPriority}
                               onChange={(e) => setEditingPriority(e.target.value)}
-                              className="text-xs border border-gray-200 rounded-full px-3 py-1 outline-none bg-white"
+                              className="text-xs border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 outline-none bg-white dark:bg-gray-950 text-gray-600 dark:text-gray-300"
                             >
                               <option value="high">🔴 High</option>
                               <option value="medium">🟡 Medium</option>
@@ -333,8 +333,8 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
                             </select>
                           </div>
                           <div className="flex gap-2">
-                              <button onClick={() => handleEditSave(task)} className="bg-gray-900 hover:bg-gray-700 text-white text-xs px-4 py-1.5 rounded-full transition">✓ Save</button>
-                              <button onClick={() => setEditingId(null)} className="border border-gray-200 hover:border-gray-400 text-gray-500 text-xs px-4 py-1.5 rounded-full transition">Batal</button>
+                              <button onClick={() => handleEditSave(task)} className="bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded-full transition">✓ Save</button>
+                              <button onClick={() => setEditingId(null)} className="border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 text-xs px-4 py-1.5 rounded-full transition">Batal</button>
                           </div>
                               <Attachments taskId={task.id} />
                         </div>
@@ -372,9 +372,9 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
       {activeTab === "charts" && (
         <div className="space-y-5">
           {/* Weekly Activity — Area Chart */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className="text-sm font-semibold text-gray-800 mb-1">Aktiviti Mingguan</h3>
-            <p className="text-xs text-gray-400 mb-4">Task dibuat vs diselesaikan dalam 7 hari lepas</p>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5">
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">Aktiviti Mingguan</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Task dibuat vs diselesaikan dalam 7 hari lepas</p>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={weeklyData}>
                 <defs>
@@ -399,9 +399,9 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Priority Bar Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3 className="text-sm font-semibold text-gray-800 mb-1">Tasks by Priority</h3>
-              <p className="text-xs text-gray-400 mb-4">Bilangan task mengikut priority</p>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">Tasks by Priority</h3>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Bilangan task mengikut priority</p>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={priorityData} barSize={32}>
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
@@ -417,12 +417,12 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
             </div>
 
             {/* Status Pie Chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3 className="text-sm font-semibold text-gray-800 mb-1">Completion Status</h3>
-              <p className="text-xs text-gray-400 mb-4">Nisbah task selesai vs pending</p>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">Completion Status</h3>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Nisbah task selesai vs pending</p>
               {statusData.length === 0 ? (
                 <div className="flex items-center justify-center h-40">
-                  <p className="text-gray-300 text-sm">Belum ada task</p>
+                  <p className="text-gray-300 dark:text-gray-600 text-sm">Belum ada task</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={180}>
@@ -449,8 +449,8 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
           </div>
 
           {/* Summary */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4">Ringkasan</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5">
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Ringkasan</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Completion Rate", value: `${progress}%`, color: "text-indigo-500" },
@@ -466,7 +466,7 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
               ].map((item) => (
                 <div key={item.label} className="text-center">
                   <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
-                  <p className="text-xs text-gray-400 mt-1">{item.label}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{item.label}</p>
                 </div>
               ))}
             </div>

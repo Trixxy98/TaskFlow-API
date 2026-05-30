@@ -4,9 +4,9 @@ import { getProjects, createProject, deleteProject, updateTask } from "../servic
 const COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"];
 
 const PRIORITY_COLOR = {
-  high: "bg-red-50 text-red-500",
-  medium: "bg-amber-50 text-amber-500",
-  low: "bg-emerald-50 text-emerald-500",
+  high: "bg-red-50 dark:bg-red-900/20 text-red-500",
+  medium: "bg-amber-50 dark:bg-amber-900/20 text-amber-500",
+  low: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500",
 };
 
 export default function Projects({ tasks, setTasks }) {
@@ -52,25 +52,25 @@ export default function Projects({ tasks, setTasks }) {
     <div className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Projects</h2>
-          <p className="text-gray-400 text-sm mt-1">{projects.length} projek aktif</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Projects</h2>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{projects.length} projek aktif</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="bg-gray-900 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-xl transition font-medium">
+        <button onClick={() => setShowForm(true)} className="bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-xl transition font-medium">
           + New Project
         </button>
       </div>
 
       {/* Create Form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
-          <h3 className="text-sm font-semibold text-gray-800 mb-3">Project Baru</h3>
+        <form onSubmit={handleCreate} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5 mb-6">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">Project Baru</h3>
           <input
             autoFocus type="text" placeholder="Nama project..."
             value={newName} onChange={(e) => setNewName(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 mb-3"
+            className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 mb-3"
           />
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs text-gray-400">Warna:</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Warna:</span>
             {COLORS.map((c) => (
               <button key={c} type="button" onClick={() => setNewColor(c)}
                 className={`w-6 h-6 rounded-full transition ${newColor === c ? "ring-2 ring-offset-2 ring-gray-400" : ""}`}
@@ -79,10 +79,10 @@ export default function Projects({ tasks, setTasks }) {
             ))}
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="bg-gray-900 text-white text-xs px-5 py-2 rounded-full hover:bg-gray-700 transition font-medium">
+            <button type="submit" className="bg-gray-900 dark:bg-blue-600 text-white text-xs px-5 py-2 rounded-full hover:bg-gray-700 dark:hover:bg-blue-500 transition font-medium">
               Simpan
             </button>
-            <button type="button" onClick={() => setShowForm(false)} className="border border-gray-200 text-gray-500 text-xs px-5 py-2 rounded-full hover:border-gray-400 transition">
+            <button type="button" onClick={() => setShowForm(false)} className="border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-xs px-5 py-2 rounded-full hover:border-gray-400 dark:hover:border-gray-500 transition">
               Batal
             </button>
           </div>
@@ -90,7 +90,7 @@ export default function Projects({ tasks, setTasks }) {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" /></div>
+        <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-blue-500 rounded-full animate-spin" /></div>
       ) : (
         <div className="space-y-5">
           {projects.map((project) => {
@@ -98,29 +98,29 @@ export default function Projects({ tasks, setTasks }) {
             const done = ptasks.filter((t) => t.status === "completed").length;
             const progress = ptasks.length > 0 ? Math.round((done / ptasks.length) * 100) : 0;
             return (
-              <div key={project.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div key={project.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: project.color }} />
-                    <h3 className="font-semibold text-gray-900">{project.name}</h3>
-                    <span className="text-xs text-gray-400">{ptasks.length} tasks</span>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{project.name}</h3>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{ptasks.length} tasks</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-400">{done}/{ptasks.length} selesai</span>
-                    <button onClick={() => handleDelete(project.id)} className="text-gray-300 hover:text-red-400 transition text-sm">✕</button>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{done}/{ptasks.length} selesai</span>
+                    <button onClick={() => handleDelete(project.id)} className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition text-sm">✕</button>
                   </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
+                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mb-4">
                   <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: project.color }} />
                 </div>
                 {ptasks.length === 0 ? (
-                  <p className="text-xs text-gray-300 text-center py-2">Tiada task dalam project ini</p>
+                  <p className="text-xs text-gray-300 dark:text-gray-600 text-center py-2">Tiada task dalam project ini</p>
                 ) : (
                   <div className="space-y-2">
                     {ptasks.map((task) => (
                       <div key={task.id} className="flex items-center gap-3 py-1">
                         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${task.status === "completed" ? "bg-emerald-400" : "bg-gray-300"}`} />
-                        <span className={`text-sm flex-1 ${task.status === "completed" ? "line-through text-gray-300" : "text-gray-700"}`}>{task.title}</span>
+                        <span className={`text-sm flex-1 ${task.status === "completed" ? "line-through text-gray-300 dark:text-gray-600" : "text-gray-700 dark:text-gray-200"}`}>{task.title}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority || "medium"]}`}>{task.priority || "medium"}</span>
                       </div>
                     ))}
@@ -132,16 +132,16 @@ export default function Projects({ tasks, setTasks }) {
 
           {/* Unassigned */}
           {unassigned.length > 0 && (
-            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-5">
-              <h3 className="text-sm font-medium text-gray-400 mb-3">Unassigned Tasks ({unassigned.length})</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 p-5">
+              <h3 className="text-sm font-medium text-gray-400 dark:text-gray-500 mb-3">Unassigned Tasks ({unassigned.length})</h3>
               <div className="space-y-2">
                 {unassigned.map((task) => (
                   <div key={task.id} className="flex items-center gap-3 py-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-gray-200 flex-shrink-0" />
-                    <span className="text-sm text-gray-600 flex-1 truncate">{task.title}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 flex-1 truncate">{task.title}</span>
                     {projects.length > 0 && (
                       <select onChange={(e) => e.target.value && handleAssign(task.id, e.target.value)} defaultValue=""
-                        className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none text-gray-400 bg-white">
+                        className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 outline-none text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-950">
                         <option value="" disabled>Assign...</option>
                         {projects.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
                       </select>
@@ -155,7 +155,7 @@ export default function Projects({ tasks, setTasks }) {
           {projects.length === 0 && unassigned.length === 0 && (
             <div className="text-center py-20">
               <p className="text-4xl mb-3">📁</p>
-              <p className="text-gray-400 text-sm">Tiada task lagi. Tambah task dulu!</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">Tiada task lagi. Tambah task dulu!</p>
             </div>
           )}
         </div>
