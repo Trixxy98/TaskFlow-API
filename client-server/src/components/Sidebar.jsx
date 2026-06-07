@@ -1,6 +1,4 @@
 import { useState } from "react";
-import useTheme from "../hooks/UseTheme";
-
 
 const NAV_SECTIONS = [
   {
@@ -35,11 +33,9 @@ const NAV_SECTIONS = [
 export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks, teamMembers, theme, setTheme, unreadCount }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  
 
   const projectCount = [...new Set(tasks.map((t) => t.project).filter(Boolean))].length;
   const feedbackCount = tasks.filter((t) => t.feedback).length;
-  const notifCount = tasks.filter((t) => t.status === "pending" && t.due_date).length;
 
   const getBadge = (id) => {
     if (id === "projects") return projectCount || null;
@@ -70,7 +66,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
 
       {/* Sidebar */}
       <aside className={`
-  fixed md:sticky top-0 h-screen z-40 bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-gray-800
+        fixed md:sticky top-0 h-screen z-40 bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-gray-800
         flex flex-col transition-all duration-300 overflow-y-auto
         ${collapsed ? "md:w-16" : "md:w-60"}
         ${mobileOpen ? "left-0 w-64" : "-left-64 md:left-0"}
@@ -180,8 +176,8 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
                 <span className="text-white text-xs font-bold">{user.name.charAt(0).toUpperCase()}</span>
               </div>
               <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{user.name}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{user.name}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>
               </div>
             </div>
           )}

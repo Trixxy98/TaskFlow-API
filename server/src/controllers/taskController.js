@@ -1,12 +1,17 @@
 const { db } = require("../config/database");
 
+const sendServerError = (res, error) =>
+  res.status(500).json({ success: false, message: error.message });
+
+const VALID_STATUS = ["pending", "completed"];
+
 const getAllTasks = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status } = req.query;
     let query = "SELECT * FROM tasks WHERE user_id = ?";
     let params = [userId];
-    if (status && ["pending", "completed"].includes(status)) {
+    if (status && VALID_STATUS.includes(status)) {
       query += " AND status = ?";
       params.push(status);
     }
@@ -14,7 +19,7 @@ const getAllTasks = async (req, res) => {
     const [tasks] = await db.query(query, params);
     res.json({ success: true, data: tasks });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return sendServerError(res, error);
   }
 };
 
@@ -22,8 +27,9 @@ const createTask = async (req, res) => {
   try {
     const userId = req.user.id;
     const { title, description, due_date, priority, kanban_status } = req.body;
-    if (!title)
+    if (!title) {
       return res.status(400).json({ success: false, message: "Title diperlukan" });
+    }
 
     const [result] = await db.query(
       "INSERT INTO tasks (user_id, title, description, due_date, priority, kanban_status) VALUES (?, ?, ?, ?, ?, ?)",
@@ -32,7 +38,7 @@ const createTask = async (req, res) => {
     const [newTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
     res.status(201).json({ success: true, message: "Task berjaya dicipta", data: newTask[0] });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return sendServerError(res, error);
   }
 };
 
@@ -70,7 +76,7 @@ const updateTask = async (req, res) => {
 
     res.json({ success: true, message: "Task berjaya dikemaskini", data: updated[0] });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return sendServerError(res, error);
   }
 };
 
@@ -79,13 +85,14 @@ const deleteTask = async (req, res) => {
     const userId = req.user.id;
     const taskId = req.params.id;
     const [existing] = await db.query("SELECT * FROM tasks WHERE id = ? AND user_id = ?", [taskId, userId]);
-    if (existing.length === 0)
+    if (existing.length === 0) {
       return res.status(404).json({ success: false, message: "Task tidak dijumpai" });
+    }
 
     await db.query("DELETE FROM tasks WHERE id = ?", [taskId]);
     res.json({ success: true, message: "Task berjaya dipadam" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return sendServerError(res, error);
   }
 };
 

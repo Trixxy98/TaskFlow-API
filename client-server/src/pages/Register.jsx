@@ -1,6 +1,25 @@
 import { useState } from "react";
 import { registerUser } from "../services/api";
 
+const PASSWORD_RULES = [
+  {
+    test: (password) => password.length >= 8,
+    message: "Password mesti sekurang-kurangnya 8 aksara.",
+  },
+  {
+    test: (password) => /[A-Z]/.test(password),
+    message: "Password mesti ada sekurang-kurangnya 1 huruf besar (A-Z).",
+  },
+  {
+    test: (password) => /[0-9]/.test(password),
+    message: "Password mesti ada sekurang-kurangnya 1 nombor.",
+  },
+  {
+    test: (password) => /[^A-Za-z0-9]/.test(password),
+    message: "Password mesti ada sekurang-kurangnya 1 simbol khas (contoh: !@#$).",
+  },
+];
+
 export default function Register({ goToLogin }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
@@ -12,23 +31,9 @@ export default function Register({ goToLogin }) {
     setError("");
     setSuccess("");
 
-    if (form.password.length < 8) {
-      setError("Password mesti sekurang-kurangnya 8 aksara.");
-      return;
-    }
-
-    if (!/[A-Z]/.test(form.password)) {
-      setError("Password mesti ada sekurang-kurangnya 1 huruf besar (A-Z).");
-      return;
-    }
-
-    if (!/[0-9]/.test(form.password)) {
-      setError("Password mesti ada sekurang-kurangnya 1 nombor.");
-      return;
-    }
-
-    if (!/[^A-Za-z0-9]/.test(form.password)) {
-      setError("Password mesti ada sekurang-kurangnya 1 simbol khas (contoh: !@#$).");
+    const invalidRule = PASSWORD_RULES.find((rule) => !rule.test(form.password));
+    if (invalidRule) {
+      setError(invalidRule.message);
       return;
     }
 
