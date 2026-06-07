@@ -5,6 +5,9 @@ const { db } = require("../config/database");
 
 router.use(auth);
 
+const handleRouteError = (res, error) =>
+  res.status(500).json({ success: false, message: error.message });
+
 // Auto create workspace kalau belum ada
 const getOrCreateWorkspace = async (userId) => {
   const [rows] = await db.query("SELECT * FROM workspaces WHERE owner_id = ?", [userId]);
@@ -30,7 +33,9 @@ router.get("/", async (req, res) => {
       [workspace.id]
     );
     res.json({ success: true, data: members, workspace });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 // POST /api/team/invite — invite by email
@@ -73,25 +78,25 @@ router.post("/invite", async (req, res) => {
     );
 
     // Create notification untuk invited user
-const [ownerRows] = await db.query("SELECT name FROM users WHERE id = ?", [req.user.id]);
-const ownerName = ownerRows[0]?.name || "Someone";
+    const [ownerRows] = await db.query("SELECT name FROM users WHERE id = ?", [req.user.id]);
+    const ownerName = ownerRows[0]?.name || "Someone";
 
-await db.query(
-  `INSERT INTO notifications (user_id, type, title, message, data) 
-   VALUES (?, ?, ?, ?, ?)`,
-  [
-    invitedUser.id,
-    "team_invite",
-    "Jemputan Pasukan Baru! 🎉",
-    `${ownerName} telah menjemput anda untuk menyertai workspace mereka sebagai ${role || "member"}.`,
-    JSON.stringify({
-      workspace_id: workspace.id,
-      workspace_name: workspace.name,
-      owner_name: ownerName,
-      role: role || "member",
-    }),
-  ]
-);
+    await db.query(
+      `INSERT INTO notifications (user_id, type, title, message, data) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        invitedUser.id,
+        "team_invite",
+        "Jemputan Pasukan Baru! 🎉",
+        `${ownerName} telah menjemput anda untuk menyertai workspace mereka sebagai ${role || "member"}.`,
+        JSON.stringify({
+          workspace_id: workspace.id,
+          workspace_name: workspace.name,
+          owner_name: ownerName,
+          role: role || "member",
+        }),
+      ]
+    );
 
     res.status(201).json({
       success: true,
@@ -104,7 +109,9 @@ await db.query(
         joined_at: new Date().toISOString(),
       }
     });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 // PATCH /api/team/:id/role — update role
@@ -117,7 +124,9 @@ router.patch("/:id/role", async (req, res) => {
       [role, req.params.id, workspace.id]
     );
     res.json({ success: true, message: "Role berjaya dikemaskini" });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 // DELETE /api/team/:id — remove member
@@ -129,7 +138,9 @@ router.delete("/:id", async (req, res) => {
       [req.params.id, workspace.id]
     );
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 module.exports = router;

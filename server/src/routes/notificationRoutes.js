@@ -5,6 +5,9 @@ const { db } = require("../config/database");
 
 router.use(auth);
 
+const handleRouteError = (res, error) =>
+  res.status(500).json({ success: false, message: error.message });
+
 // GET — semua notifications untuk user
 router.get("/", async (req, res) => {
   try {
@@ -14,7 +17,9 @@ router.get("/", async (req, res) => {
     );
     const unreadCount = notifications.filter((n) => !n.is_read).length;
     res.json({ success: true, data: notifications, unreadCount });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 // PATCH — mark as read
@@ -22,7 +27,9 @@ router.patch("/:id/read", async (req, res) => {
   try {
     await db.query("UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 // PATCH — mark all as read
@@ -30,7 +37,9 @@ router.patch("/read-all", async (req, res) => {
   try {
     await db.query("UPDATE notifications SET is_read = TRUE WHERE user_id = ?", [req.user.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 // DELETE — clear notification
@@ -38,7 +47,9 @@ router.delete("/:id", async (req, res) => {
   try {
     await db.query("DELETE FROM notifications WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+  } catch (error) {
+    return handleRouteError(res, error);
+  }
 });
 
 module.exports = router;
