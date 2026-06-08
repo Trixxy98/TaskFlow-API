@@ -24,9 +24,7 @@ export default function Team({ teamMembers, setTeamMembers }) {
   const [success, setSuccess] = useState("");
   const [workspace, setWorkspace] = useState(null);
 
-  useEffect(() => { fetchTeam(); }, []);
-
-  const fetchTeam = async () => {
+  async function fetchTeam() {
     setLoading(true);
     const res = await getTeam();
     if (res.success) {
@@ -34,7 +32,10 @@ export default function Team({ teamMembers, setTeamMembers }) {
       setWorkspace(res.workspace);
     }
     setLoading(false);
-  };
+  }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  useEffect(() => { fetchTeam(); }, []);
 
   const handleInvite = async (e) => {
     e.preventDefault();

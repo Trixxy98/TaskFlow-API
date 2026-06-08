@@ -4,7 +4,6 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Completed from "./pages/Completed";
 import CalendarView from "./pages/CalendarView";
-import Search from "./pages/Search";
 import Profile from "./pages/Profile";
 import Projects from "./pages/Projects";
 import Feedback from "./pages/Feedback";
@@ -22,26 +21,25 @@ import TableView from "./pages/TableView";
 export default function App() {
   const [page, setPage] = useState("login");
   const [activePage, setActivePage] = useState("dashboard");
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [tasks, setTasks] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { theme, setTheme } = useTheme();
 
+  async function fetchTasks() {
+    const res = await getTasks();
+    if (res.success) setTasks(res.data);
+  }
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-  }, []);
-
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (user) fetchTasks();
   }, [user]);
-
-  const fetchTasks = async () => {
-    const res = await getTasks();
-    if (res.success) setTasks(res.data);
-  };
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -65,12 +63,6 @@ export default function App() {
   const handleDelete = async (id) => {
     const res = await deleteTask(id);
     if (res.success) setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const handleUpdateTask = async (id, data) => {
-    const res = await updateTask(id, data);
-    if (res.success) setTasks((prev) => prev.map((t) => (t.id === id ? res.data : t)));
-    return res;
   };
 
   if (!user) {

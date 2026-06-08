@@ -1,21 +1,22 @@
 import { useState, useEffect } from "react";
 import { getFeedback, createFeedback, deleteFeedback } from "../services/api";
 
-export default function Feedback({ tasks, user }) {
+export default function Feedback({ tasks }) {
   const [feedbacks, setFeedbacks] = useState([]);
   const [selectedTask, setSelectedTask] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { fetchFeedback(); }, []);
-
-  const fetchFeedback = async () => {
+  async function fetchFeedback() {
     setLoading(true);
     const res = await getFeedback();
     if (res.success) setFeedbacks(res.data);
     setLoading(false);
-  };
+  }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchFeedback(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
