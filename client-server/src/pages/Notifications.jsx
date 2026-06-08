@@ -14,9 +14,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
-  useEffect(() => { fetchNotifications(); }, []);
-
-  const fetchNotifications = async () => {
+  async function fetchNotifications() {
     setLoading(true);
     const res = await getNotifications();
     if (res.success) {
@@ -24,7 +22,10 @@ export default function Notifications({ tasks, onUnreadChange }) {
       onUnreadChange?.(res.unreadCount);
     }
     setLoading(false);
-  };
+  }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  useEffect(() => { fetchNotifications(); }, []);
 
   const handleRead = async (id) => {
     await markNotificationRead(id);

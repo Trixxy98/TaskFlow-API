@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { getTasks, createTask, updateTask, deleteTask } from "../services/api";
+import { createTask, updateTask, deleteTask } from "../services/api";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import Attachments from "../components/Attachments";
-import { getAttachments } from "../services/api";
 
 const PRIORITY_CONFIG = {
   high:   { label: "High",   color: "text-red-500",    bg: "bg-red-50 dark:bg-red-900/20",    border: "border-red-200 dark:border-red-800"   },
@@ -13,50 +12,11 @@ const PRIORITY_CONFIG = {
   low:    { label: "Low",    color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-200 dark:border-emerald-800" },
 };
 
-function TaskAttachmentPreview({ taskId }) {
-  const [attachments, setAttachments] = useState([]);
-
-  useEffect(() => {
-    getAttachments(taskId).then((res) => {
-      if (res.success) setAttachments(res.data);
-    });
-  }, [taskId]);
-
-  if (attachments.length === 0) return null;
-
-  const images = attachments.filter((a) => a.mimetype.startsWith("image/"));
-  const pdfs = attachments.filter((a) => a.mimetype === "application/pdf");
-
-  return (
-    <div className="mt-2 flex items-center gap-2 flex-wrap">
-      {images.map((att) => (
-        <a key={att.id} href={`http://localhost:3001${att.url}`} target="_blank" rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}>
-          <img
-            src={`http://localhost:3001${att.url}`}
-            alt={att.originalname}
-            className="w-14 h-14 rounded-lg object-cover border border-gray-100 dark:border-gray-700 hover:opacity-80 transition"
-          />
-        </a>
-      ))}
-      {pdfs.map((att) => (
-        <a key={att.id} href={`http://localhost:3001${att.url}`} target="_blank" rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 text-xs px-3 py-2 rounded-lg hover:opacity-80 transition border border-red-100 dark:border-red-900/30">
-          <span>📄</span>
-          <span className="truncate max-w-24">{att.originalname}</span>
-        </a>
-      ))}
-    </div>
-  );
-}
-
-export default function Dashboard({ user, onLogout, tasks, setTasks }) {
+export default function Dashboard({ user, tasks, setTasks }) {
   const [filter, setFilter] = useState("all");
   const [newTask, setNewTask] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
-  const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingDueDate, setEditingDueDate] = useState("");
@@ -64,7 +24,6 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
   const [activeTab, setActiveTab] = useState("tasks");
   const editRef = useRef(null);
 
-  useEffect(() => { setLoading(false); }, [tasks]);
   useEffect(() => {
     if (editingId && editRef.current) editRef.current.focus();
   }, [editingId]);
@@ -281,11 +240,7 @@ export default function Dashboard({ user, onLogout, tasks, setTasks }) {
           </div>
 
           {/* Task List */}
-          {loading ? (
-            <div className="text-center py-16">
-              <div className="w-6 h-6 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-blue-500 rounded-full animate-spin mx-auto" />
-            </div>
-          ) : filteredTasks.length === 0 ? (
+          {filteredTasks.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-4xl mb-3">🎉</p>
               <p className="text-gray-400 text-sm">Tiada task di sini</p>

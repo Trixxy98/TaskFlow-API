@@ -30,7 +30,7 @@ export default function useTheme() {
     // Listen for system changes kalau mode = system
     if (theme === "system") {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      const handler = (e) => applyTheme("system");
+      const handler = () => applyTheme("system");
       mediaQuery.addEventListener("change", handler);
       return () => mediaQuery.removeEventListener("change", handler);
     }

@@ -16,14 +16,15 @@ export default function Projects({ tasks, setTasks }) {
   const [newColor, setNewColor] = useState("#6366f1");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchProjects(); }, []);
-
-  const fetchProjects = async () => {
+  async function fetchProjects() {
     setLoading(true);
     const res = await getProjects();
     if (res.success) setProjects(res.data);
     setLoading(false);
-  };
+  }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchProjects(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();

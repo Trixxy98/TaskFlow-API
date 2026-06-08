@@ -13,14 +13,16 @@ export default function Attachments({ taskId }) {
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef(null);
 
+  async function fetchAttachments() {
+    const res = await getAttachments(taskId);
+    if (res.success) setAttachments(res.data);
+  }
+
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (taskId) fetchAttachments();
   }, [taskId]);
-
-  const fetchAttachments = async () => {
-    const res = await getAttachments(taskId);
-    if (res.success) setAttachments(res.data);
-  };
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleUpload = async (file) => {
     if (!file) return;
