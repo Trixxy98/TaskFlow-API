@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getAttachments, uploadFile, deleteAttachment } from "../services/api";
 
 const formatSize = (bytes) => {
@@ -13,15 +13,15 @@ export default function Attachments({ taskId }) {
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef(null);
 
-  async function fetchAttachments() {
+  const fetchAttachments = useCallback(async () => {
     const res = await getAttachments(taskId);
     if (res.success) setAttachments(res.data);
-  }
+  }, [taskId]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (taskId) fetchAttachments();
-  }, [taskId]);
+  }, [taskId, fetchAttachments]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleUpload = async (file) => {
