@@ -17,6 +17,8 @@ import NotionPages from "./pages/NotionPages";
 import Kanban from "./pages/Kanban";
 import useTheme from "./hooks/useTheme";
 import TableView from "./pages/TableView";
+import useAuthGuard from "./hooks/useAuthGuard";
+import useIdleTimeout from "./hooks/useIdleTimeout";
 
 export default function App() {
   const [page, setPage] = useState("login");
@@ -29,6 +31,7 @@ export default function App() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { theme, setTheme } = useTheme();
+  const { isAuthenticated } = useAuthGuard(user);
 
   async function fetchTasks() {
     const res = await getTasks();
@@ -54,6 +57,12 @@ export default function App() {
     setTasks([]);
   };
 
+  useIdleTimeout({
+    enabled: Boolean(user),
+    timeoutMs: 30 * 60 * 1000,
+    onTimeout: handleLogout,
+  });
+
   const handleToggle = async (task) => {
     const status = task.status === "pending" ? "completed" : "pending";
     const res = await updateTask(task.id, { status });
@@ -65,7 +74,7 @@ export default function App() {
     if (res.success) setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  if (!user) {
+  if (!user || !isAuthenticated) {
     return (
       <>
         {page === "login" && <Login onLogin={handleLogin} goToRegister={() => setPage("register")} />}
@@ -79,24 +88,24 @@ export default function App() {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Sidebar
-  activePage={activePage}
-  onNavigate={setActivePage}
-  user={user}
-  onLogout={handleLogout}
-  tasks={tasks}
-  teamMembers={teamMembers}
-  theme={theme}
-  setTheme={setTheme}
-  unreadCount={unreadCount}
-/>
+        activePage={activePage}
+        onNavigate={setActivePage}
+        user={user}
+        onLogout={handleLogout}
+        tasks={tasks}
+        teamMembers={teamMembers}
+        theme={theme}
+        setTheme={setTheme}
+        unreadCount={unreadCount}
+      />
 
       <main className="flex-1 overflow-y-auto min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
-        {activePage === "dashboard" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}
+        {activePage === "dashboard" && <Dashboard user={user} tasks={tasks} setTasks={setTasks} />}
         {activePage === "projects" && <Projects tasks={tasks} setTasks={setTasks} />}
         {activePage === "calendar" && <CalendarView {...sharedProps} />}
         {activePage === "completed" && <Completed {...sharedProps} />}
-        {activePage === "tasks" && <Dashboard user={user} onLogout={handleLogout} tasks={tasks} setTasks={setTasks} />}
-        {activePage === "feedback" && <Feedback tasks={tasks} user={user} />}
+        {activePage === "tasks" && <Dashboard user={user} tasks={tasks} setTasks={setTasks} />}
+        {activePage === "feedback" && <Feedback tasks={tasks} />}
         {activePage === "team" && <Team teamMembers={teamMembers} setTeamMembers={setTeamMembers} tasks={tasks} />}
         {activePage === "notifications" && <Notifications tasks={tasks} onUnreadChange={setUnreadCount} />}
         {activePage === "help" && <Help />}

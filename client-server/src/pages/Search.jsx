@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import useDebounce from "../hooks/useDebounce";
 
 const PRIORITY_COLOR = {
   high: "bg-red-50 dark:bg-red-900/20 text-red-500",
@@ -8,9 +9,14 @@ const PRIORITY_COLOR = {
 
 export default function Search({ tasks, onToggle, onDelete }) {
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 250);
 
-  const results = tasks.filter((t) =>
-    t.title.toLowerCase().includes(query.toLowerCase())
+  const results = useMemo(
+    () =>
+      tasks.filter((t) =>
+        t.title.toLowerCase().includes(debouncedQuery.toLowerCase())
+      ),
+    [tasks, debouncedQuery]
   );
 
   const formatDate = (dateStr) => {
