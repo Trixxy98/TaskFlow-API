@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,6 +8,7 @@ import {
   createColumnHelper,
 } from "@tanstack/react-table";
 import { updateTask, deleteTask } from "../services/api";
+import useDebounce from "../hooks/useDebounce";
 
 const PRIORITY_CONFIG = {
   high:   { label: "High",   color: "text-red-500",     bg: "bg-red-50 dark:bg-red-900/20"     },
@@ -19,38 +20,39 @@ const columnHelper = createColumnHelper();
 
 export default function TableView({ tasks, setTasks }) {
   const [sorting, setSorting] = useState([]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [editingCell, setEditingCell] = useState(null); // { rowId, field }
   const [editValue, setEditValue] = useState("");
+  const debouncedGlobalFilter = useDebounce(searchInput, 250);
 
-  const handleToggle = async (task) => {
+  const handleToggle = useCallback(async (task) => {
     const status = task.status === "pending" ? "completed" : "pending";
     const res = await updateTask(task.id, { status });
     if (res.success) setTasks((prev) => prev.map((t) => (t.id === task.id ? res.data : t)));
-  };
+  }, [setTasks]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     const res = await deleteTask(id);
     if (res.success) setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, [setTasks]);
 
   const startEdit = (rowId, field, value) => {
     setEditingCell({ rowId, field });
     setEditValue(value || "");
   };
 
-  const saveEdit = async (task) => {
+  const saveEdit = useCallback(async (task) => {
     if (!editingCell) return;
     const { field } = editingCell;
     const res = await updateTask(task.id, { [field]: editValue });
     if (res.success) setTasks((prev) => prev.map((t) => (t.id === task.id ? res.data : t)));
     setEditingCell(null);
-  };
+  }, [editingCell, editValue, setTasks]);
 
-  const handlePriority = async (task, priority) => {
+  const handlePriority = useCallback(async (task, priority) => {
     const res = await updateTask(task.id, { priority });
     if (res.success) setTasks((prev) => prev.map((t) => (t.id === task.id ? res.data : t)));
-  };
+  }, [setTasks]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -218,14 +220,14 @@ export default function TableView({ tasks, setTasks }) {
         </button>
       ),
     }),
-  ], [editingCell, editValue, tasks]);
+  ], [editingCell, editValue, handleDelete, handlePriority, handleToggle, saveEdit]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: tasks,
     columns,
-    state: { sorting, globalFilter },
+    state: { sorting, globalFilter: debouncedGlobalFilter },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -250,8 +252,8 @@ export default function TableView({ tasks, setTasks }) {
           <input
             type="text"
             placeholder="Cari task..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm outline-none focus:border-gray-400 shadow-sm w-48"
           />
         </div>
@@ -294,7 +296,7 @@ export default function TableView({ tasks, setTasks }) {
               {table.getRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className="text-center py-16 text-gray-400 text-sm">
-                    {globalFilter ? `Tiada result untuk "${globalFilter}"` : "Belum ada task"}
+                    {searchInput ? `Tiada result untuk "${searchInput}"` : "Belum ada task"}
                   </td>
                 </tr>
               ) : (
