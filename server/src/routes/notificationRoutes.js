@@ -1,54 +1,45 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
-const { db } = require("../config/database");
+const notificationService = require("../services/notificationService");
 
 router.use(auth);
 
-const handleRouteError = (res, error) =>
-  res.status(500).json({ success: false, message: error.message });
-
-// GET — semua notifications untuk user
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
-    const [notifications] = await db.query(
-      "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
-      [req.user.id]
-    );
-    const unreadCount = notifications.filter((n) => !n.is_read).length;
-    res.json({ success: true, data: notifications, unreadCount });
-  } catch (error) {
-    return handleRouteError(res, error);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const result = await notificationService.getNotifications(req.user.id, page, limit);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    next(err);
   }
 });
 
-// PATCH — mark as read
-router.patch("/:id/read", async (req, res) => {
+router.patch("/:id/read", async (req, res, next) => {
   try {
-    await db.query("UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
+    await notificationService.markAsRead(req.params.id, req.user.id);
     res.json({ success: true });
-  } catch (error) {
-    return handleRouteError(res, error);
+  } catch (err) {
+    next(err);
   }
 });
 
-// PATCH — mark all as read
-router.patch("/read-all", async (req, res) => {
+router.patch("/read-all", async (req, res, next) => {
   try {
-    await db.query("UPDATE notifications SET is_read = TRUE WHERE user_id = ?", [req.user.id]);
+    await notificationService.markAllAsRead(req.user.id);
     res.json({ success: true });
-  } catch (error) {
-    return handleRouteError(res, error);
+  } catch (err) {
+    next(err);
   }
 });
 
-// DELETE — clear notification
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req, res, next) => {
   try {
-    await db.query("DELETE FROM notifications WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
+    await notificationService.deleteNotification(req.params.id, req.user.id);
     res.json({ success: true });
-  } catch (error) {
-    return handleRouteError(res, error);
+  } catch (err) {
+    next(err);
   }
 });
 
