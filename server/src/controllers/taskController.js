@@ -46,7 +46,7 @@ const updateTask = async (req, res) => {
   try {
     const userId = req.user.id;
     const taskId = req.params.id;
-    const { title, description, status, due_date, priority, kanban_status } = req.body;
+    const { title, description, status, due_date, priority, kanban_status, project } = req.body;
 
     const [rows] = await db.query(
       "SELECT * FROM tasks WHERE id = ? AND user_id = ?",
@@ -60,7 +60,7 @@ const updateTask = async (req, res) => {
     const current = rows[0];
 
     await db.query(
-      "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, priority = ?, kanban_status = ? WHERE id = ?",
+      "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, priority = ?, kanban_status = ?, project = ? WHERE id = ?",
       [
         title || current.title,
         description !== undefined ? description : current.description,
@@ -68,6 +68,7 @@ const updateTask = async (req, res) => {
         due_date !== undefined ? due_date : current.due_date,
         priority || current.priority,
         kanban_status !== undefined ? kanban_status : current.kanban_status,
+        project !== undefined ? project : current.project,
         taskId,
       ]
     );
