@@ -9,15 +9,37 @@ const getAllTasks = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status } = req.query;
-    let query = "SELECT * FROM tasks WHERE user_id = ?";
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const offset = (page - 1) * limit;
+
+    let where = "WHERE user_id = ?";
     let params = [userId];
     if (status && VALID_STATUS.includes(status)) {
-      query += " AND status = ?";
+      where += " AND status = ?";
       params.push(status);
     }
-    query += " ORDER BY created_at DESC";
-    const [tasks] = await db.query(query, params);
-    res.json({ success: true, data: tasks });
+
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total FROM tasks ${where}`,
+      params
+    );
+
+    const [tasks] = await db.query(
+      `SELECT * FROM tasks ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    res.json({
+      success: true,
+      data: tasks,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     return sendServerError(res, error);
   }
@@ -26,14 +48,14 @@ const getAllTasks = async (req, res) => {
 const createTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { title, description, due_date, priority, kanban_status } = req.body;
+    const { title, description, due_date, priority, kanban_status, project } = req.body;
     if (!title) {
       return res.status(400).json({ success: false, message: "Title diperlukan" });
     }
 
     const [result] = await db.query(
-      "INSERT INTO tasks (user_id, title, description, due_date, priority, kanban_status) VALUES (?, ?, ?, ?, ?, ?)",
-      [userId, title, description || null, due_date || null, priority || "medium", kanban_status || "todo"]
+      "INSERT INTO tasks (user_id, title, description, due_date, priority, kanban_status, project) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [userId, title, description || null, due_date || null, priority || "medium", kanban_status || "todo", project || null]
     );
     const [newTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
     res.status(201).json({ success: true, message: "Task berjaya dicipta", data: newTask[0] });
