@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const { db } = require("../config/database");
+const validate = require("../middleware/validate");
+const teamValidators = require("../validators/team.validators");
 
 router.use(auth);
 
@@ -39,7 +41,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST /api/team/invite — invite by email
-router.post("/invite", async (req, res) => {
+router.post("/invite", validate(teamValidators.invite), async (req, res) => {
   try {
     const { email, role } = req.body;
     if (!email) return res.status(400).json({ success: false, message: "Email diperlukan" });
@@ -115,7 +117,7 @@ router.post("/invite", async (req, res) => {
 });
 
 // PATCH /api/team/:id/role — update role
-router.patch("/:id/role", async (req, res) => {
+router.patch("/:id/role", validate(teamValidators.updateRole), async (req, res) => {
   try {
     const { role } = req.body;
     const workspace = await getOrCreateWorkspace(req.user.id);
