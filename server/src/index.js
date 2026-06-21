@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
+const morgan = require("morgan");
 require("dotenv").config();
 
 const { testConnection } = require("./config/database");
@@ -16,6 +17,7 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
 app.use(helmet());
 app.use(cors({ origin: ALLOWED_ORIGIN }));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
 app.use("/api", apiLimiter);
 

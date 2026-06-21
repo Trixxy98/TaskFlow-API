@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const { db } = require("../config/database");
+const validate = require("../middleware/validate");
+const projectValidators = require("../validators/project.validators");
 
 router.use(auth);
 
@@ -17,7 +19,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST create project
-router.post("/", async (req, res) => {
+router.post("/", validate(projectValidators.createProject), async (req, res) => {
   try {
     const { name, color } = req.body;
     if (!name) return res.status(400).json({ success: false, message: "Nama diperlukan" });

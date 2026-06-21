@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const { db } = require("../config/database");
+const validate = require("../middleware/validate");
+const feedbackValidators = require("../validators/feedback.validators");
 
 router.use(auth);
 
@@ -20,7 +22,7 @@ router.get("/", async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, message: e.message }); }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", validate(feedbackValidators.createFeedback), async (req, res) => {
   try {
     const { task_id, message } = req.body;
     if (!task_id || !message) return res.status(400).json({ success: false, message: "task_id dan message diperlukan" });
