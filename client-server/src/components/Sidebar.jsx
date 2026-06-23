@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const NAV_SECTIONS = [
   {
@@ -30,9 +31,18 @@ const NAV_SECTIONS = [
   },
 ];
 
-export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks, teamMembers, theme, setTheme, unreadCount }) {
+export default function Sidebar({ user, onLogout, tasks, teamMembers, theme, setTheme, unreadCount }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isActive = (id) => location.pathname === `/${id}` || (id === "dashboard" && location.pathname === "/");
+
+  const handleNavigate = (id) => {
+    navigate(`/${id}`);
+    setMobileOpen(false);
+  };
 
   const projectCount = [...new Set(tasks.map((t) => t.project).filter(Boolean))].length;
   const feedbackCount = tasks.filter((t) => t.feedback).length;
@@ -109,9 +119,9 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
                   return (
                     <button
                       key={item.id}
-                      onClick={() => { onNavigate(item.id); setMobileOpen(false); }}
+                      onClick={() => handleNavigate(item.id)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        activePage === item.id
+                        isActive(item.id)
                           ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
                           : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-800 dark:hover:text-white"
                       }`}
@@ -141,7 +151,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
               <div className="space-y-0.5">
                 {teamMembers.length === 0 ? (
                   <button
-                    onClick={() => { onNavigate("team"); setMobileOpen(false); }}
+                    onClick={() => handleNavigate("team")}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
                   >
                     <span>+ Invite member</span>
@@ -150,7 +160,7 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, tasks,
                   teamMembers.map((member) => (
                     <button
                       key={member.id}
-                      onClick={() => { onNavigate("team"); setMobileOpen(false); }}
+                      onClick={() => handleNavigate("team")}
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
                     >
                       <div className="w-6 h-6 rounded-full bg-indigo-200 flex items-center justify-center flex-shrink-0">
