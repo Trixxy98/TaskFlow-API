@@ -1,125 +1,299 @@
 const API_URL = "http://localhost:3001/api";
 
 const getToken = () => localStorage.getItem("token");
+const setToken = (token) => localStorage.setItem("token", token);
 
-const headers = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${getToken()}`,
-});
+// ─── Token Refresh Interceptor ────────────────────────────────────────────────
+// Prevents multiple simultaneous refresh calls when several requests get 401 at once.
 
-// Auth
+let isRefreshing = false;
+let refreshQueue = [];
+
+const processQueue = (error, token = null) => {
+  refreshQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
+  refreshQueue = [];
+};
+
+const attemptRefresh = async () => {
+  const res = await fetch(`${API_URL}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("refresh_failed");
+  const json = await res.json();
+  return json.data.token;
+};
+
+/**
+ * Wrapper untuk semua API calls yang memerlukan auth.
+ * Secara automatik refresh access token apabila 401 diterima.
+ */
+const fetchWithAuth = async (url, options = {}) => {
+  const authHeaders = {
+    ...options.headers,
+    Authorization: `Bearer ${getToken()}`,
+  };
+
+  const res = await fetch(url, {
+    ...options,
+    credentials: "include",
+    headers: authHeaders,
+  });
+
+  if (res.status !== 401 || options._retry) {
+    return res;
+  }
+
+  // 401 received — attempt to refresh access token
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      refreshQueue.push({ resolve, reject });
+    }).then((newToken) =>
+      fetch(url, {
+        ...options,
+        _retry: true,
+        credentials: "include",
+        headers: { ...options.headers, Authorization: `Bearer ${newToken}` },
+      })
+    );
+  }
+
+  isRefreshing = true;
+
+  try {
+    const newToken = await attemptRefresh();
+    setToken(newToken);
+    processQueue(null, newToken);
+    return fetch(url, {
+      ...options,
+      _retry: true,
+      credentials: "include",
+      headers: { ...options.headers, Authorization: `Bearer ${newToken}` },
+    });
+  } catch (err) {
+    processQueue(err);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+    return new Response(JSON.stringify({ success: false, message: "Sesi tamat. Sila login semula." }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  } finally {
+    isRefreshing = false;
+  }
+};
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 export const registerUser = async (data) => {
-  const res = await fetch(`${API_URL}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+  const res = await fetch(`${API_URL}/auth/register`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
   return res.json();
 };
 
 export const loginUser = async (data) => {
-  const res = await fetch(`${API_URL}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
   return res.json();
 };
 
-// Tasks
-export const getTasks = async () => {
-  const res = await fetch(`${API_URL}/tasks`, { headers: headers() });
+export const logoutUser = async () => {
+  await fetch(`${API_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+};
+
+// ─── Tasks ────────────────────────────────────────────────────────────────────
+
+export const getTasks = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetchWithAuth(`${API_URL}/tasks${query ? `?${query}` : ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
+
 export const createTask = async (data) => {
-  const res = await fetch(`${API_URL}/tasks`, { method: "POST", headers: headers(), body: JSON.stringify(data) });
+  const res = await fetchWithAuth(`${API_URL}/tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
   return res.json();
 };
+
 export const updateTask = async (id, data) => {
-  const res = await fetch(`${API_URL}/tasks/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(data) });
+  const res = await fetchWithAuth(`${API_URL}/tasks/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
   return res.json();
 };
+
 export const deleteTask = async (id) => {
-  const res = await fetch(`${API_URL}/tasks/${id}`, { method: "DELETE", headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/tasks/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
 
-// Projects
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
 export const getProjects = async () => {
-  const res = await fetch(`${API_URL}/projects`, { headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/projects`, {
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
+
 export const createProject = async (data) => {
-  const res = await fetch(`${API_URL}/projects`, { method: "POST", headers: headers(), body: JSON.stringify(data) });
+  const res = await fetchWithAuth(`${API_URL}/projects`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
   return res.json();
 };
+
 export const deleteProject = async (id) => {
-  const res = await fetch(`${API_URL}/projects/${id}`, { method: "DELETE", headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/projects/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
 
-// Team
+// ─── Team ─────────────────────────────────────────────────────────────────────
+
 export const getTeam = async () => {
-  const res = await fetch(`${API_URL}/team`, { headers: headers() });
-  return res.json();
-};
-export const inviteMember = async (data) => {
-  const res = await fetch(`${API_URL}/team/invite`, { method: "POST", headers: headers(), body: JSON.stringify(data) });
-  return res.json();
-};
-export const updateMemberRole = async (id, role) => {
-  const res = await fetch(`${API_URL}/team/${id}/role`, { method: "PATCH", headers: headers(), body: JSON.stringify({ role }) });
-  return res.json();
-};
-export const removeMember = async (id) => {
-  const res = await fetch(`${API_URL}/team/${id}`, { method: "DELETE", headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/team`, {
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
 
-// Feedback
+export const inviteMember = async (data) => {
+  const res = await fetchWithAuth(`${API_URL}/team/invite`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const updateMemberRole = async (id, role) => {
+  const res = await fetchWithAuth(`${API_URL}/team/${id}/role`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
+  return res.json();
+};
+
+export const removeMember = async (id) => {
+  const res = await fetchWithAuth(`${API_URL}/team/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+};
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
 export const getFeedback = async () => {
-  const res = await fetch(`${API_URL}/feedback`, { headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/feedback`, {
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
+
 export const createFeedback = async (data) => {
-  const res = await fetch(`${API_URL}/feedback`, { method: "POST", headers: headers(), body: JSON.stringify(data) });
+  const res = await fetchWithAuth(`${API_URL}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
   return res.json();
 };
+
 export const deleteFeedback = async (id) => {
-  const res = await fetch(`${API_URL}/feedback/${id}`, { method: "DELETE", headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/feedback/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
+
+// ─── Attachments ──────────────────────────────────────────────────────────────
 
 export const getAttachments = async (taskId) => {
-  const res = await fetch(`${API_URL}/upload/${taskId}`, { headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/upload/${taskId}`, {
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
 
 export const uploadFile = async (taskId, file) => {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await fetch(`${API_URL}/upload/${taskId}`, {
+  const res = await fetchWithAuth(`${API_URL}/upload/${taskId}`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${getToken()}` },
+    headers: {},
     body: formData,
   });
   return res.json();
 };
 
 export const deleteAttachment = async (id) => {
-  const res = await fetch(`${API_URL}/upload/file/${id}`, {
+  const res = await fetchWithAuth(`${API_URL}/upload/file/${id}`, {
     method: "DELETE",
-    headers: headers(),
+    headers: { "Content-Type": "application/json" },
   });
   return res.json();
 };
 
-// Notifications
-export const getNotifications = async () => {
-  const res = await fetch(`${API_URL}/notifications`, { headers: headers() });
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export const getNotifications = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetchWithAuth(`${API_URL}/notifications${query ? `?${query}` : ""}`, {
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
+
 export const markNotificationRead = async (id) => {
-  const res = await fetch(`${API_URL}/notifications/${id}/read`, { method: "PATCH", headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/notifications/${id}/read`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
+
 export const markAllRead = async () => {
-  const res = await fetch(`${API_URL}/notifications/read-all`, { method: "PATCH", headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/notifications/read-all`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
+
 export const deleteNotification = async (id) => {
-  const res = await fetch(`${API_URL}/notifications/${id}`, { method: "DELETE", headers: headers() });
+  const res = await fetchWithAuth(`${API_URL}/notifications/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };

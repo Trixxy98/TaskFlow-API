@@ -13,7 +13,7 @@ import Notifications from "./pages/Notifications";
 import Help from "./pages/Help";
 import Settings from "./pages/Settings";
 import Sidebar from "./components/Sidebar";
-import { getTasks, updateTask, deleteTask } from "./services/api";
+import { getTasks, updateTask, deleteTask, logoutUser } from "./services/api";
 import NotionPages from "./pages/NotionPages";
 import Kanban from "./pages/Kanban";
 import useTheme from "./hooks/useTheme";
@@ -73,7 +73,8 @@ export default function App() {
     navigate("/dashboard");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutUser();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);

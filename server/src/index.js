@@ -3,6 +3,7 @@ const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const { testConnection } = require("./config/database");
@@ -16,9 +17,10 @@ const PORT = process.env.PORT || 3001;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
 app.use(helmet());
-app.use(cors({ origin: ALLOWED_ORIGIN }));
+app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
+app.use(cookieParser());
 app.use("/api", apiLimiter);
 
 app.use("/api/auth", authRoutes);
