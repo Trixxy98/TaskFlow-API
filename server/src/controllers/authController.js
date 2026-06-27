@@ -158,4 +158,72 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { register, login, refreshAccessToken, logout };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const [users] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
+
+    // Always respond with success to prevent email enumeration attacks
+    const genericMessage = "Jika email anda berdaftar, satu pautan reset akan dihantar.";
+
+    if (users.length === 0) {
+      return res.json({ success: true, message: genericMessage });
+    }
+
+    const userId = users[0].id;
+    const rawToken = crypto.randomBytes(40).toString("hex");
+    const tokenHash = hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Delete any existing reset token for this user
+    await db.query("DELETE FROM password_resets WHERE user_id = ?", [userId]);
+    await db.query(
+      "INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)",
+      [userId, tokenHash, expiresAt]
+    );
+
+    const response = { success: true, message: genericMessage };
+
+    // In development, return the token directly for testing (no email service needed)
+    if (process.env.NODE_ENV !== "production") {
+      response.devResetToken = rawToken;
+      response.devResetUrl = `${process.env.ALLOWED_ORIGIN || "http://localhost:5173"}/reset-password?token=${rawToken}`;
+    }
+
+    res.json(response);
+  } catch (error) {
+    return sendServerError(res, error);
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    const tokenHash = hashToken(token);
+    const [rows] = await db.query(
+      "SELECT * FROM password_resets WHERE token_hash = ? AND expires_at > NOW()",
+      [tokenHash]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ success: false, message: "Token tidak sah atau telah tamat tempoh." });
+    }
+
+    const { user_id } = rows[0];
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, user_id]);
+
+    // Invalidate reset token and all refresh tokens (force re-login)
+    await db.query("DELETE FROM password_resets WHERE user_id = ?", [user_id]);
+    await db.query("DELETE FROM refresh_tokens WHERE user_id = ?", [user_id]);
+
+    res.json({ success: true, message: "Kata laluan berjaya ditukar. Sila log masuk semula." });
+  } catch (error) {
+    return sendServerError(res, error);
+  }
+};
+
+module.exports = { register, login, refreshAccessToken, logout, forgotPassword, resetPassword };

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, Outlet, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Completed from "./pages/Completed";
 import CalendarView from "./pages/CalendarView";
@@ -113,6 +115,8 @@ export default function App() {
         path="/register"
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
       />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected routes — redirect to /login if not authenticated */}
       <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} />}>

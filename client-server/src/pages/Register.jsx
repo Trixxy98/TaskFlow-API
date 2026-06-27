@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { registerUser } from "../services/api";
 
 const PASSWORD_RULES = [
@@ -20,7 +21,8 @@ const PASSWORD_RULES = [
   },
 ];
 
-export default function Register({ goToLogin }) {
+export default function Register() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -143,7 +145,7 @@ export default function Register({ goToLogin }) {
 
         <p className="text-gray-400 dark:text-gray-500 text-xs text-center mt-6">
           Dah ada akaun?{" "}
-          <button onClick={goToLogin} className="text-gray-900 dark:text-blue-400 font-medium hover:underline">
+          <button onClick={() => navigate("/login")} className="text-gray-900 dark:text-blue-400 font-medium hover:underline">
             Log masuk
           </button>
         </p>

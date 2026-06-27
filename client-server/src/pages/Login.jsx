@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/api";
 
-export default function Login({ onLogin, goToRegister }) {
+export default function Login({ onLogin }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,7 +53,16 @@ export default function Login({ onLogin, goToRegister }) {
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 dark:text-gray-500 mb-1.5 font-medium">Password</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs text-gray-400 dark:text-gray-500 font-medium">Password</label>
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+              >
+                Lupa password?
+              </button>
+            </div>
             <input
               type="password"
               placeholder="••••••••"
@@ -73,7 +84,7 @@ export default function Login({ onLogin, goToRegister }) {
 
         <p className="text-gray-400 dark:text-gray-500 text-xs text-center mt-6">
           Belum ada akaun?{" "}
-          <button onClick={goToRegister} className="text-gray-900 dark:text-blue-400 font-medium hover:underline">
+          <button onClick={() => navigate("/register")} className="text-gray-900 dark:text-blue-400 font-medium hover:underline">
             Daftar sekarang
           </button>
         </p>

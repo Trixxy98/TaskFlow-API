@@ -97,6 +97,21 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- ============================================================
+-- PASSWORD RESETS
+-- token_hash: SHA-256 hash of the raw token sent to the user
+-- ============================================================
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT         NOT NULL,
+  token_hash VARCHAR(64) NOT NULL,
+  expires_at DATETIME    NOT NULL,
+  created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_token (token_hash),
+  INDEX idx_user_id (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ============================================================
 -- REFRESH TOKENS
 -- token_hash: SHA-256 hash of the raw refresh token (raw token stored in httpOnly cookie)
 -- ============================================================
