@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, Navigate, Outlet, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -17,12 +17,13 @@ import Settings from "./pages/Settings";
 import Sidebar from "./components/Sidebar";
 import { getTasks, updateTask, deleteTask, logoutUser } from "./services/api";
 import NotionPages from "./pages/NotionPages";
+import WorkspaceTasks from "./pages/WorkspaceTasks";
 import Kanban from "./pages/Kanban";
 import useTheme from "./hooks/useTheme";
 import TableView from "./pages/TableView";
 import useAuthGuard from "./hooks/useAuthGuard";
 import useIdleTimeout from "./hooks/useIdleTimeout";
-import useSocket from "./hooks/useSocket";
+import { SocketProvider } from "./contexts/SocketContext";
 
 function ProtectedRoute({ isAuthenticated }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -91,10 +92,7 @@ export default function App() {
     onTimeout: handleLogout,
   });
 
-  useSocket({
-    token: user ? localStorage.getItem("token") : null,
-    onNotification: () => setUnreadCount((prev) => prev + 1),
-  });
+  const handleNotification = useCallback(() => setUnreadCount((prev) => prev + 1), []);
 
   const handleToggle = async (task) => {
     const status = task.status === "pending" ? "completed" : "pending";
@@ -111,6 +109,10 @@ export default function App() {
   const layoutProps = { user, tasks, teamMembers, theme, setTheme, onLogout: handleLogout, unreadCount };
 
   return (
+    <SocketProvider
+      token={user ? localStorage.getItem("token") : null}
+      onNotification={handleNotification}
+    >
     <Routes>
       {/* Public routes — redirect to /dashboard if already logged in */}
       <Route
@@ -133,6 +135,7 @@ export default function App() {
           <Route path="/projects" element={<Projects tasks={tasks} setTasks={setTasks} />} />
           <Route path="/kanban" element={<Kanban tasks={tasks} setTasks={setTasks} />} />
           <Route path="/table" element={<TableView tasks={tasks} setTasks={setTasks} />} />
+          <Route path="/workspace" element={<WorkspaceTasks />} />
           <Route path="/notes" element={<NotionPages />} />
           <Route path="/calendar" element={<CalendarView {...sharedProps} />} />
           <Route path="/completed" element={<Completed {...sharedProps} />} />
@@ -148,5 +151,6 @@ export default function App() {
       {/* Fallback — redirect based on auth state */}
       <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
     </Routes>
+    </SocketProvider>
   );
 }

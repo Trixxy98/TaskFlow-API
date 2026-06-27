@@ -18,6 +18,7 @@ const NAV_SECTIONS = [
       { id: "calendar", label: "Calendar", icon: "📅" },
       { id: "completed", label: "Completion", icon: "✓" },
       { id: "tasks", label: "Tasks", icon: "☰" },
+      { id: "workspace", label: "Workspace Tasks", icon: "🤝" },
       { id: "feedback", label: "Feedback", icon: "💬", badge: null },
     ],
   },

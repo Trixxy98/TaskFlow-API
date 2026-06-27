@@ -161,6 +161,14 @@ export const updateTask = async (id, data) => {
   return res.json();
 };
 
+export const getWorkspaceTasks = async (params = {}) => {
+  const query = new URLSearchParams({ ...params, scope: "workspace" }).toString();
+  const res = await fetchWithAuth(`${API_URL}/tasks?${query}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+};
+
 export const deleteTask = async (id) => {
   const res = await fetchWithAuth(`${API_URL}/tasks/${id}`, {
     method: "DELETE",
@@ -224,6 +232,22 @@ export const updateMemberRole = async (id, role) => {
 
 export const removeMember = async (id) => {
   const res = await fetchWithAuth(`${API_URL}/team/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+};
+
+export const acceptInvite = async (memberId) => {
+  const res = await fetchWithAuth(`${API_URL}/team/invites/${memberId}/accept`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+};
+
+export const rejectInvite = async (memberId) => {
+  const res = await fetchWithAuth(`${API_URL}/team/invites/${memberId}/reject`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
   });

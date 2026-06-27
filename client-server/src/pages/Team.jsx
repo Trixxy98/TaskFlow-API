@@ -23,6 +23,8 @@ export default function Team({ teamMembers, setTeamMembers }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [workspace, setWorkspace] = useState(null);
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [joinedWorkspaces, setJoinedWorkspaces] = useState([]);
 
   async function fetchTeam() {
     setLoading(true);
@@ -30,6 +32,8 @@ export default function Team({ teamMembers, setTeamMembers }) {
     if (res.success) {
       setTeamMembers(res.data);
       setWorkspace(res.workspace);
+      setPendingInvites(res.pendingInvites || []);
+      setJoinedWorkspaces(res.joinedWorkspaces || []);
     }
     setLoading(false);
   }
@@ -46,7 +50,7 @@ export default function Team({ teamMembers, setTeamMembers }) {
     const res = await inviteMember(form);
 
     if (res.success) {
-      setTeamMembers([...teamMembers, { ...res.data, color: COLORS[teamMembers.length % COLORS.length] }]);
+      setPendingInvites((prev) => [...prev, { ...res.data }]);
       setSuccess(res.message);
       setForm({ email: "", role: "member" });
       setShowForm(false);
@@ -157,67 +161,119 @@ export default function Team({ teamMembers, setTeamMembers }) {
         <div className="flex justify-center py-16">
           <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
         </div>
-      ) : teamMembers.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-4xl mb-3">👥</p>
-          <p className="text-gray-400 text-sm mb-2">Belum ada ahli pasukan</p>
-          <p className="text-gray-300 dark:text-gray-600 text-xs">Invite rakan yang dah register dalam TaskFlow</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="mt-4 text-indigo-500 text-sm hover:underline"
-          >
-            Invite ahli pertama
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-3 mt-4">
-          {teamMembers.map((member, i) => {
-            const role = ROLE_CONFIG[member.role] || ROLE_CONFIG.member;
-            const color = COLORS[i % COLORS.length];
-            return (
-              <div
-                key={member.id}
-                className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm px-5 py-4 flex items-center gap-4 group"
-              >
-                {/* Avatar */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${color}`}>
-                  <span className="text-sm font-bold">{member.name.charAt(0).toUpperCase()}</span>
-                </div>
+      ) : (() => {
+        // Merge accepted members (invited by me) + workspace owners (invited me) into one list
+        const unifiedMembers = [
+          ...teamMembers.map((m) => ({ key: `m-${m.id}`, id: m.id, name: m.name, email: m.email, role: m.role, joined_at: m.joined_at, type: "invited" })),
+          ...joinedWorkspaces.map((ws) => ({ key: `j-${ws.member_id}`, id: ws.member_id, name: ws.owner_name, email: ws.owner_email, role: ws.my_role, joined_at: null, type: "joined", workspace_name: ws.workspace_name })),
+        ];
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{member.name}</p>
-                  <p className="text-xs text-gray-400">{member.email}</p>
-                  {member.joined_at && (
-                    <p className="text-xs text-gray-300 dark:text-gray-600 mt-0.5">
-                      Joined {formatDate(member.joined_at)}
-                    </p>
-                  )}
-                </div>
+        const hasAnyone = unifiedMembers.length > 0 || pendingInvites.length > 0;
 
-                {/* Role dropdown */}
-                <select
-                  value={member.role}
-                  onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                  className={`text-xs px-2 py-1 rounded-lg border-0 outline-none cursor-pointer font-medium ${role.bg} ${role.color}`}
-                >
-                  <option value="admin">Admin</option>
-                  <option value="member">Member</option>
-                  <option value="viewer">Viewer</option>
-                </select>
+        if (!hasAnyone) {
+          return (
+            <div className="text-center py-20">
+              <p className="text-4xl mb-3">👥</p>
+              <p className="text-gray-400 text-sm mb-2">Belum ada ahli pasukan</p>
+              <p className="text-gray-300 dark:text-gray-600 text-xs">Invite rakan yang dah register dalam TaskFlow</p>
+              <button onClick={() => setShowForm(true)} className="mt-4 text-indigo-500 text-sm hover:underline">
+                Invite ahli pertama
+              </button>
+            </div>
+          );
+        }
 
-                {/* Remove */}
-                <button
-                  onClick={() => handleRemove(member.id, member.name)}
-                  className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm"
-                >
-                  ✕
-                </button>
+        return (
+          <>
+            {/* Unified team list */}
+            {unifiedMembers.length > 0 && (
+              <div className="space-y-3 mt-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">
+                  Ahli Pasukan ({unifiedMembers.length})
+                </p>
+                {unifiedMembers.map((member, i) => {
+                  const roleConf = ROLE_CONFIG[member.role] || ROLE_CONFIG.member;
+                  const color = COLORS[i % COLORS.length];
+                  return (
+                    <div
+                      key={member.key}
+                      className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm px-5 py-4 flex items-center gap-4 group"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${color}`}>
+                        <span className="text-sm font-bold">{member.name.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{member.name}</p>
+                        <p className="text-xs text-gray-400">{member.email}</p>
+                        {member.type === "joined" && (
+                          <p className="text-xs text-indigo-400 mt-0.5">dari {member.workspace_name}</p>
+                        )}
+                        {member.joined_at && (
+                          <p className="text-xs text-gray-300 dark:text-gray-600 mt-0.5">Joined {formatDate(member.joined_at)}</p>
+                        )}
+                      </div>
+
+                      {/* Role — only editable for members I invited */}
+                      {member.type === "invited" ? (
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                          className={`text-xs px-2 py-1 rounded-lg border-0 outline-none cursor-pointer font-medium ${roleConf.bg} ${roleConf.color}`}
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="member">Member</option>
+                          <option value="viewer">Viewer</option>
+                        </select>
+                      ) : (
+                        <span className={`text-xs px-2 py-1 rounded-lg font-medium ${roleConf.bg} ${roleConf.color}`}>
+                          {roleConf.label}
+                        </span>
+                      )}
+
+                      {/* Remove — only for members I invited */}
+                      {member.type === "invited" && (
+                        <button
+                          onClick={() => handleRemove(member.id, member.name)}
+                          className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
+
+            {/* Pending outgoing invites */}
+            {pendingInvites.length > 0 && (
+              <div className="space-y-2 mt-6">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">Menunggu Jawapan ({pendingInvites.length})</p>
+                {pendingInvites.map((member, i) => {
+                  const color = COLORS[i % COLORS.length];
+                  return (
+                    <div
+                      key={member.id}
+                      className="bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-800/30 px-5 py-4 flex items-center gap-4"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${color} opacity-60`}>
+                        <span className="text-sm font-bold">{member.name.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{member.name}</p>
+                        <p className="text-xs text-gray-400">{member.email}</p>
+                      </div>
+                      <span className="text-xs text-amber-500 font-medium bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-full">
+                        ⏳ Pending
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* Info box */}
       <div className="mt-8 bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-4 border border-blue-100 dark:border-blue-900/30">

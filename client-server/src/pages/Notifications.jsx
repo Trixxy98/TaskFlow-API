@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getNotifications, markNotificationRead, markAllRead, deleteNotification } from "../services/api";
+import { getNotifications, markNotificationRead, markAllRead, deleteNotification, acceptInvite, rejectInvite } from "../services/api";
 
 const NOTIF_CONFIG = {
   team_invite: { icon: "👥", color: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800" },
@@ -45,6 +45,28 @@ export default function Notifications({ tasks, onUnreadChange }) {
     const updated = notifications.filter((n) => n.id !== id);
     setNotifications(updated);
     onUnreadChange?.(updated.filter((n) => !n.is_read).length);
+  };
+
+  const handleAcceptInvite = async (notif) => {
+    const data = typeof notif.data === "string" ? JSON.parse(notif.data) : notif.data;
+    const res = await acceptInvite(data?.member_id);
+    if (res.success) {
+      setNotifications((prev) =>
+        prev.map((n) => n.id === notif.id ? { ...n, is_read: true, _invite_resolved: "accepted" } : n)
+      );
+      onUnreadChange?.((prev) => Math.max(0, prev - 1));
+    }
+  };
+
+  const handleRejectInvite = async (notif) => {
+    const data = typeof notif.data === "string" ? JSON.parse(notif.data) : notif.data;
+    const res = await rejectInvite(data?.member_id);
+    if (res.success) {
+      setNotifications((prev) =>
+        prev.map((n) => n.id === notif.id ? { ...n, is_read: true, _invite_resolved: "rejected" } : n)
+      );
+      onUnreadChange?.((prev) => Math.max(0, prev - 1));
+    }
   };
 
   const formatTime = (dateStr) => {
@@ -157,6 +179,36 @@ export default function Notifications({ tasks, onUnreadChange }) {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">{notif.message}</p>
+
+                  {/* Accept / Reject buttons for team invites */}
+                  {notif.type === "team_invite" && (() => {
+                    const data = typeof notif.data === "string" ? JSON.parse(notif.data || "{}") : (notif.data || {});
+                    if (!data?.member_id) return null;
+                    if (notif._invite_resolved === "accepted") return (
+                      <p className="text-xs text-emerald-500 font-medium mt-2">✅ Jemputan diterima</p>
+                    );
+                    if (notif._invite_resolved === "rejected") return (
+                      <p className="text-xs text-gray-400 mt-2">Jemputan ditolak</p>
+                    );
+                    if (notif.is_read) return null;
+                    return (
+                      <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleAcceptInvite(notif)}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1 rounded-full font-medium transition"
+                        >
+                          Terima
+                        </button>
+                        <button
+                          onClick={() => handleRejectInvite(notif)}
+                          className="border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-red-400 hover:text-red-400 text-xs px-3 py-1 rounded-full transition"
+                        >
+                          Tolak
+                        </button>
+                      </div>
+                    );
+                  })()}
+
                   <p className="text-xs text-gray-300 dark:text-gray-600 mt-1.5">{formatTime(notif.created_at)}</p>
                 </div>
               </div>
