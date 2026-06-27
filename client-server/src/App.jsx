@@ -22,6 +22,7 @@ import useTheme from "./hooks/useTheme";
 import TableView from "./pages/TableView";
 import useAuthGuard from "./hooks/useAuthGuard";
 import useIdleTimeout from "./hooks/useIdleTimeout";
+import useSocket from "./hooks/useSocket";
 
 function ProtectedRoute({ isAuthenticated }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -88,6 +89,11 @@ export default function App() {
     enabled: Boolean(user),
     timeoutMs: 30 * 60 * 1000,
     onTimeout: handleLogout,
+  });
+
+  useSocket({
+    token: user ? localStorage.getItem("token") : null,
+    onNotification: () => setUnreadCount((prev) => prev + 1),
   });
 
   const handleToggle = async (task) => {

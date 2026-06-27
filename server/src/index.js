@@ -1,3 +1,4 @@
+const http = require("http");
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -7,12 +8,16 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const { testConnection } = require("./config/database");
+const { initSocket } = require("./config/socket");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
+const httpServer = http.createServer(app);
+initSocket(httpServer);
+
 const PORT = process.env.PORT || 3001;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
@@ -43,7 +48,7 @@ app.use(errorHandler);
 
 const startServer = async () => {
   await testConnection();
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
   });
 };

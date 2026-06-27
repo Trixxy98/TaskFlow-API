@@ -1,4 +1,5 @@
 const { db } = require("../config/database");
+const { createNotification } = require("./notificationService");
 
 const getOrCreateWorkspace = async (userId) => {
   const [rows] = await db.query("SELECT * FROM workspaces WHERE owner_id = ?", [userId]);
@@ -61,15 +62,12 @@ const inviteMember = async (inviterId, email, role) => {
   const [[owner]] = await db.query("SELECT name FROM users WHERE id = ?", [inviterId]);
   const ownerName = owner?.name || "Someone";
 
-  await db.query(
-    "INSERT INTO notifications (user_id, type, title, message, data) VALUES (?, ?, ?, ?, ?)",
-    [
-      invitedUser.id,
-      "team_invite",
-      "Jemputan Pasukan Baru!",
-      `${ownerName} telah menjemput anda untuk menyertai workspace mereka sebagai ${role}.`,
-      JSON.stringify({ workspace_id: workspace.id, workspace_name: workspace.name, owner_name: ownerName, role }),
-    ]
+  await createNotification(
+    invitedUser.id,
+    "team_invite",
+    "Jemputan Pasukan Baru!",
+    `${ownerName} telah menjemput anda untuk menyertai workspace mereka sebagai ${role}.`,
+    { workspace_id: workspace.id, workspace_name: workspace.name, owner_name: ownerName, role }
   );
 
   return {
