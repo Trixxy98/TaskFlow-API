@@ -113,6 +113,26 @@ export const logoutUser = async () => {
   });
 };
 
+export const forgotPassword = async (email) => {
+  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+};
+
+export const resetPassword = async (token, password, confirmPassword) => {
+  const res = await fetch(`${API_URL}/auth/reset-password`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password, confirmPassword }),
+  });
+  return res.json();
+};
+
 // ─── Tasks ────────────────────────────────────────────────────────────────────
 
 export const getTasks = async (params = {}) => {
