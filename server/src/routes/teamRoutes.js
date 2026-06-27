@@ -9,8 +9,8 @@ router.use(auth);
 
 router.get("/", async (req, res, next) => {
   try {
-    const { members, workspace } = await teamService.getMembers(req.user.id);
-    res.json({ success: true, data: members, workspace });
+    const { members, pendingInvites, joinedWorkspaces, workspace } = await teamService.getMembers(req.user.id);
+    res.json({ success: true, data: members, pendingInvites, joinedWorkspaces, workspace });
   } catch (err) {
     next(err);
   }
@@ -21,6 +21,24 @@ router.post("/invite", validate(teamValidators.invite), async (req, res, next) =
     const { email, role } = req.body;
     const data = await teamService.inviteMember(req.user.id, email, role);
     res.status(201).json({ success: true, message: `${data.name} berjaya dijemput!`, data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/invites/:id/accept", async (req, res, next) => {
+  try {
+    await teamService.respondToInvite(req.user.id, req.params.id, "accept");
+    res.json({ success: true, message: "Jemputan berjaya diterima!" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/invites/:id/reject", async (req, res, next) => {
+  try {
+    await teamService.respondToInvite(req.user.id, req.params.id, "reject");
+    res.json({ success: true, message: "Jemputan ditolak" });
   } catch (err) {
     next(err);
   }

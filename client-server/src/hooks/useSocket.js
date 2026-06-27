@@ -5,10 +5,11 @@ const SOCKET_URL = "http://localhost:3001";
 
 /**
  * Connects to the Socket.io server with the current access token.
- * Calls onNotification whenever the server emits "new_notification".
+ * - onNotification: called on "new_notification" events
+ * - events: map of { eventName: handler } for any additional socket events
  * Automatically disconnects on unmount or when token becomes null.
  */
-export default function useSocket({ token, onNotification }) {
+export default function useSocket({ token, onNotification, events = {} }) {
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -27,10 +28,16 @@ export default function useSocket({ token, onNotification }) {
       onNotification?.(notification);
     });
 
+    Object.entries(events).forEach(([event, handler]) => {
+      socket.on(event, handler);
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
+    // events object is defined inline at callsite — intentionally excluded from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return socketRef;
