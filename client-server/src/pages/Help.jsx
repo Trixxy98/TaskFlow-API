@@ -4,7 +4,6 @@ const FAQS = [
   { q: "Macam mana nak tambah task baru?", a: "Pergi ke halaman Tasks, taip dalam kotak 'Apa yang perlu dibuat?' dan klik + Tambah." },
   { q: "Boleh ke set priority untuk task?", a: "Ya! Masa tambah task, pilih priority (High/Medium/Low) dari dropdown. Boleh tukar bila-bila masa dengan klik pada task." },
   { q: "Macam mana nak set due date?", a: "Masa tambah task, pilih tarikh dari date picker. Task yang overdue akan ditanda dengan warna merah." },
-  { q: "Macam mana nak invite ahli pasukan?", a: "Pergi ke halaman Team dan klik butang + Invite. Masukkan nama, email, dan role." },
   { q: "Macam mana nak assign task ke project?", a: "Pergi ke halaman Projects. Task yang belum ada project akan muncul di bahagian Unassigned Tasks." },
   { q: "Macam mana nak edit task?", a: "Klik pada nama task untuk masuk edit mode. Boleh edit title, due date, dan priority." },
 ];
