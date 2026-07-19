@@ -18,7 +18,6 @@ const NAV_SECTIONS = [
       { id: "calendar", label: "Calendar", icon: "📅" },
       { id: "completed", label: "Completion", icon: "✓" },
       { id: "tasks", label: "Tasks", icon: "☰" },
-      { id: "workspace", label: "Workspace Tasks", icon: "🤝" },
       { id: "feedback", label: "Feedback", icon: "💬", badge: null },
     ],
   },
@@ -32,7 +31,7 @@ const NAV_SECTIONS = [
   },
 ];
 
-export default function Sidebar({ user, onLogout, tasks, teamMembers, theme, setTheme, unreadCount }) {
+export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unreadCount }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -145,37 +144,6 @@ export default function Sidebar({ user, onLogout, tasks, teamMembers, theme, set
             </div>
           ))}
 
-          {/* TEAM Section */}
-          {!collapsed && (
-            <div>
-              <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 px-2 mb-2 tracking-wider">TEAM</p>
-              <div className="space-y-0.5">
-                {teamMembers.length === 0 ? (
-                  <button
-                    onClick={() => handleNavigate("team")}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
-                  >
-                    <span>+ Invite member</span>
-                  </button>
-                ) : (
-                  teamMembers.map((member) => (
-                    <button
-                      key={member.id}
-                      onClick={() => handleNavigate("team")}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-indigo-200 flex items-center justify-center flex-shrink-0">
-                        <span className="text-indigo-700 text-xs font-bold">
-                          {member.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <span className="truncate">{member.name}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
         </nav>
 
         {/* Bottom — Theme + Logout */}

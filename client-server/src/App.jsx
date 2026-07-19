@@ -10,14 +10,12 @@ import CalendarView from "./pages/CalendarView";
 import Profile from "./pages/Profile";
 import Projects from "./pages/Projects";
 import Feedback from "./pages/Feedback";
-import Team from "./pages/Team";
 import Notifications from "./pages/Notifications";
 import Help from "./pages/Help";
 import Settings from "./pages/Settings";
 import Sidebar from "./components/Sidebar";
 import { getTasks, updateTask, deleteTask, logoutUser } from "./services/api";
 import NotionPages from "./pages/NotionPages";
-import WorkspaceTasks from "./pages/WorkspaceTasks";
 import Kanban from "./pages/Kanban";
 import useTheme from "./hooks/useTheme";
 import TableView from "./pages/TableView";
@@ -30,13 +28,12 @@ function ProtectedRoute({ isAuthenticated }) {
   return <Outlet />;
 }
 
-function AppLayout({ user, tasks, teamMembers, theme, setTheme, onLogout, unreadCount }) {
+function AppLayout({ user, tasks, theme, setTheme, onLogout, unreadCount }) {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Sidebar
         user={user}
         tasks={tasks}
-        teamMembers={teamMembers}
         theme={theme}
         setTheme={setTheme}
         onLogout={onLogout}
@@ -56,7 +53,6 @@ export default function App() {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [tasks, setTasks] = useState([]);
-  const [teamMembers, setTeamMembers] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { theme, setTheme } = useTheme();
   const { isAuthenticated } = useAuthGuard(user);
@@ -106,7 +102,7 @@ export default function App() {
   };
 
   const sharedProps = { tasks, onToggle: handleToggle, onDelete: handleDelete };
-  const layoutProps = { user, tasks, teamMembers, theme, setTheme, onLogout: handleLogout, unreadCount };
+  const layoutProps = { user, tasks, theme, setTheme, onLogout: handleLogout, unreadCount };
 
   return (
     <SocketProvider
@@ -135,12 +131,10 @@ export default function App() {
           <Route path="/projects" element={<Projects tasks={tasks} setTasks={setTasks} />} />
           <Route path="/kanban" element={<Kanban tasks={tasks} setTasks={setTasks} />} />
           <Route path="/table" element={<TableView tasks={tasks} setTasks={setTasks} />} />
-          <Route path="/workspace" element={<WorkspaceTasks />} />
           <Route path="/notes" element={<NotionPages />} />
           <Route path="/calendar" element={<CalendarView {...sharedProps} />} />
           <Route path="/completed" element={<Completed {...sharedProps} />} />
           <Route path="/feedback" element={<Feedback tasks={tasks} />} />
-          <Route path="/team" element={<Team teamMembers={teamMembers} setTeamMembers={setTeamMembers} tasks={tasks} />} />
           <Route path="/notifications" element={<Notifications tasks={tasks} onUnreadChange={setUnreadCount} />} />
           <Route path="/help" element={<Help />} />
           <Route path="/settings" element={<Settings user={user} />} />

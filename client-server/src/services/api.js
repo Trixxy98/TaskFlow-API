@@ -161,13 +161,6 @@ export const updateTask = async (id, data) => {
   return res.json();
 };
 
-export const getWorkspaceTasks = async (params = {}) => {
-  const query = new URLSearchParams({ ...params, scope: "workspace" }).toString();
-  const res = await fetchWithAuth(`${API_URL}/tasks?${query}`, {
-    headers: { "Content-Type": "application/json" },
-  });
-  return res.json();
-};
 
 export const deleteTask = async (id) => {
   const res = await fetchWithAuth(`${API_URL}/tasks/${id}`, {
@@ -197,57 +190,6 @@ export const createProject = async (data) => {
 
 export const deleteProject = async (id) => {
   const res = await fetchWithAuth(`${API_URL}/projects/${id}`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-  });
-  return res.json();
-};
-
-// ─── Team ─────────────────────────────────────────────────────────────────────
-
-export const getTeam = async () => {
-  const res = await fetchWithAuth(`${API_URL}/team`, {
-    headers: { "Content-Type": "application/json" },
-  });
-  return res.json();
-};
-
-export const inviteMember = async (data) => {
-  const res = await fetchWithAuth(`${API_URL}/team/invite`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return res.json();
-};
-
-export const updateMemberRole = async (id, role) => {
-  const res = await fetchWithAuth(`${API_URL}/team/${id}/role`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ role }),
-  });
-  return res.json();
-};
-
-export const removeMember = async (id) => {
-  const res = await fetchWithAuth(`${API_URL}/team/${id}`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-  });
-  return res.json();
-};
-
-export const acceptInvite = async (memberId) => {
-  const res = await fetchWithAuth(`${API_URL}/team/invites/${memberId}/accept`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-  return res.json();
-};
-
-export const rejectInvite = async (memberId) => {
-  const res = await fetchWithAuth(`${API_URL}/team/invites/${memberId}/reject`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
   });
