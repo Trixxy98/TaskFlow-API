@@ -276,6 +276,17 @@ export const markAllRead = async () => {
   return res.json();
 };
 
+// ─── AI Chat ──────────────────────────────────────────────────────────────────
+
+export const sendChatMessage = async (message, history = []) => {
+  const res = await fetchWithAuth(`${API_URL}/ai/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, history }),
+  });
+  return res.json();
+};
+
 export const deleteNotification = async (id) => {
   const res = await fetchWithAuth(`${API_URL}/notifications/${id}`, {
     method: "DELETE",
