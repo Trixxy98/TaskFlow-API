@@ -1,6 +1,12 @@
 # ✦ TaskFlow
 
-A full-stack task management application with a clean minimal UI, dark mode, real-time collaboration modules, and production-grade security.
+A full-stack task management application with a clean minimal UI, AI-powered chatbot, dark mode, real-time notifications, and production-grade security.
+
+## Preview
+
+![TaskFlow AI Chatbot](docs/chatbot-preview.png)
+
+*AI chatbot — ask in Malay or English to manage your tasks hands-free*
 
 ## Features
 
@@ -8,11 +14,12 @@ A full-stack task management application with a clean minimal UI, dark mode, rea
 - Task CRUD — inline edit, due date, overdue state, priority, completion toggle
 - Kanban board (drag & drop), calendar view, table view
 - Notes editor (TipTap + slash commands)
-- Projects, Team workspace, Feedback, Notifications
+- Projects, Feedback, Notifications
 - File attachments (image / PDF, 5MB limit)
 - Analytics charts (Recharts)
 - Light / Dark / System theme toggle
 - Paginated task & notification lists
+- **AI Chatbot** — powered by Google Gemini, supports natural language task management
 
 ## Tech Stack
 
@@ -42,6 +49,7 @@ A full-stack task management application with a clean minimal UI, dark mode, rea
 | `joi` | Input validation |
 | `morgan` | Request logging |
 | `cookie-parser` | httpOnly cookie parsing |
+| `@google/generative-ai` | Gemini AI function calling |
 
 ## Project Structure
 
@@ -49,9 +57,9 @@ A full-stack task management application with a clean minimal UI, dark mode, rea
 TaskFlow API/
 ├── client-server/                  # React frontend
 │   └── src/
-│       ├── components/             # Sidebar, Editor, Attachments
+│       ├── components/             # Sidebar, ChatBot, Editor, Attachments
 │       ├── hooks/                  # useAuthGuard, useIdleTimeout, useTheme, useDebounce
-│       ├── pages/                  # Dashboard, Kanban, Projects, Team ...
+│       ├── pages/                  # Dashboard, Kanban, Projects ...
 │       └── services/
 │           └── api.js              # fetchWithAuth interceptor (auto token refresh)
 │
@@ -59,7 +67,7 @@ TaskFlow API/
     └── src/
         ├── config/
         │   ├── database.js
-        │   └── migration.sql       # Full DB schema (8 tables)
+        │   └── migration.sql       # Full DB schema
         ├── controllers/
         │   ├── authController.js   # register, login, refresh, logout
         │   └── taskController.js
@@ -68,9 +76,8 @@ TaskFlow API/
         │   ├── errorHandler.js     # Global error handler
         │   ├── rateLimiter.js      # Auth + API limiters
         │   └── validate.js         # Joi validation factory
-        ├── routes/                 # authRoutes, taskRoutes, projectRoutes ...
-        ├── services/               # projectService, teamService, feedbackService, notificationService
-        └── validators/             # auth, task, project, team, feedback schemas
+        ├── routes/                 # authRoutes, taskRoutes, projectRoutes, aiRoutes ...
+        └── services/               # projectService, feedbackService, notificationService, aiService
 ```
 
 ## Setup
@@ -88,7 +95,7 @@ cd "TaskFlow API"
 mysql -u root -p < server/src/config/migration.sql
 ```
 
-This creates the `taskflow_db` database and all 8 tables:
+This creates the `taskflow_db` database and all tables:
 `users`, `tasks`, `projects`, `workspaces`, `workspace_members`, `feedback`, `notifications`, `task_attachments`, `refresh_tokens`
 
 ### 3. Backend
@@ -118,7 +125,11 @@ JWT_SECRET=your_super_secret_key_min_32_chars
 JWT_EXPIRES_IN=15m
 
 ALLOWED_ORIGIN=http://localhost:5173
+
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
+
+> Get your free Gemini API key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey). Create the key in a new project to ensure free tier access.
 
 Start the server:
 
@@ -159,12 +170,27 @@ npm run dev
 | PUT | `/api/tasks/:id` | Update task |
 | DELETE | `/api/tasks/:id` | Delete task |
 
+### AI Chatbot
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/ai/chat` | Send message to AI assistant |
+
+**Request body:**
+```json
+{
+  "message": "tambah task meeting dengan client esok priority high",
+  "history": []
+}
+```
+
+**AI capabilities:** list tasks, create task, update task, delete task, list projects — all via natural language in Malay or English.
+
 ### Other endpoints
 
 | Prefix | Methods | Description |
 |--------|---------|-------------|
 | `/api/projects` | GET, POST, DELETE | Project management |
-| `/api/team` | GET, POST, PATCH, DELETE | Workspace & team members |
 | `/api/feedback` | GET, POST, DELETE | Task feedback |
 | `/api/notifications?page=1&limit=20` | GET, PATCH, DELETE | Notifications (paginated) |
 | `/api/upload/:taskId` | GET, POST, DELETE | File attachments |
@@ -173,7 +199,7 @@ npm run dev
 
 ## Security
 
-- **Rate limiting** — auth endpoints: 10 req / 15 min · API: 100 req / 1 min
+- **Rate limiting** — auth endpoints: 10 req / 15 min · API: 100 req / 1 min · AI: 15 req / 1 min
 - **Helmet** — sets secure HTTP headers automatically
 - **Refresh token rotation** — every `/refresh` call issues a new refresh token and invalidates the old one
 - **Refresh token storage** — SHA-256 hashed in DB; raw token lives only in httpOnly cookie
@@ -186,3 +212,4 @@ npm run dev
 - Session auto-expires after **30 minutes of inactivity** (`useIdleTimeout`).
 - After updating `JWT_EXPIRES_IN` in `.env`, restart the server for the change to take effect.
 - If Vite throws a missing dependency error for `recharts`, run `npm install` inside `client-server/`.
+- The AI chatbot requires a valid `GEMINI_API_KEY`. Free tier supports up to 1,500 requests/day.
