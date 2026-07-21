@@ -22,27 +22,31 @@ import TableView from "./pages/TableView";
 import useAuthGuard from "./hooks/useAuthGuard";
 import useIdleTimeout from "./hooks/useIdleTimeout";
 import { SocketProvider } from "./contexts/SocketContext";
+import ChatBot from "./components/ChatBot";
 
 function ProtectedRoute({ isAuthenticated }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <Outlet />;
 }
 
-function AppLayout({ user, tasks, theme, setTheme, onLogout, unreadCount }) {
+function AppLayout({ user, tasks, theme, setTheme, onLogout, unreadCount, onTasksUpdated }) {
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
-      <Sidebar
-        user={user}
-        tasks={tasks}
-        theme={theme}
-        setTheme={setTheme}
-        onLogout={onLogout}
-        unreadCount={unreadCount}
-      />
-      <main className="flex-1 overflow-y-auto min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
-        <Outlet />
-      </main>
-    </div>
+    <>
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+        <Sidebar
+          user={user}
+          tasks={tasks}
+          theme={theme}
+          setTheme={setTheme}
+          onLogout={onLogout}
+          unreadCount={unreadCount}
+        />
+        <main className="flex-1 overflow-y-auto min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+          <Outlet />
+        </main>
+      </div>
+      <ChatBot user={user} onTasksUpdated={onTasksUpdated} />
+    </>
   );
 }
 
@@ -102,7 +106,7 @@ export default function App() {
   };
 
   const sharedProps = { tasks, onToggle: handleToggle, onDelete: handleDelete };
-  const layoutProps = { user, tasks, theme, setTheme, onLogout: handleLogout, unreadCount };
+  const layoutProps = { user, tasks, theme, setTheme, onLogout: handleLogout, unreadCount, onTasksUpdated: fetchTasks };
 
   return (
     <SocketProvider
