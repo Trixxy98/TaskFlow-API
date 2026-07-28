@@ -26,46 +26,7 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 -- ============================================================
--- TASKS
--- ============================================================
-CREATE TABLE IF NOT EXISTS tasks (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  user_id       INT          NOT NULL,
-  workspace_id  INT          DEFAULT NULL,
-  title         VARCHAR(255) NOT NULL,
-  description   TEXT,
-  status        ENUM('pending', 'completed') DEFAULT 'pending',
-  priority      ENUM('low', 'medium', 'high') DEFAULT 'medium',
-  kanban_status ENUM('todo', 'inprogress', 'done') DEFAULT 'todo',
-  project       VARCHAR(100) DEFAULT NULL,
-  due_date      DATE,
-  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL
-);
-
--- Add workspace_id to existing tasks table (safe re-run via procedure)
-DROP PROCEDURE IF EXISTS migrate_tasks_workspace;
-DELIMITER //
-CREATE PROCEDURE migrate_tasks_workspace()
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'tasks'
-      AND COLUMN_NAME = 'workspace_id'
-  ) THEN
-    ALTER TABLE tasks ADD COLUMN workspace_id INT DEFAULT NULL AFTER user_id;
-    ALTER TABLE tasks ADD CONSTRAINT fk_tasks_workspace FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL;
-  END IF;
-END //
-DELIMITER ;
-CALL migrate_tasks_workspace();
-DROP PROCEDURE IF EXISTS migrate_tasks_workspace;
-
--- ============================================================
--- WORKSPACES
+-- WORKSPACES (must be before tasks due to FK)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS workspaces (
   id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,27 +51,25 @@ CREATE TABLE IF NOT EXISTS workspace_members (
   FOREIGN KEY (user_id)      REFERENCES users(id)      ON DELETE CASCADE
 );
 
--- Backfill: add status column and update role enum (safe to re-run via stored procedure)
-DROP PROCEDURE IF EXISTS migrate_workspace_members;
-DELIMITER //
-CREATE PROCEDURE migrate_workspace_members()
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'workspace_members'
-      AND COLUMN_NAME = 'status'
-  ) THEN
-    ALTER TABLE workspace_members ADD COLUMN status ENUM('pending', 'accepted') DEFAULT 'pending';
-    UPDATE workspace_members SET status = 'accepted';
-  END IF;
-
-  -- Ensure 'viewer' is in the role enum
-  ALTER TABLE workspace_members MODIFY COLUMN role ENUM('owner', 'admin', 'member', 'viewer') DEFAULT 'member';
-END //
-DELIMITER ;
-CALL migrate_workspace_members();
-DROP PROCEDURE IF EXISTS migrate_workspace_members;
+-- ============================================================
+-- TASKS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS tasks (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT          NOT NULL,
+  workspace_id  INT          DEFAULT NULL,
+  title         VARCHAR(255) NOT NULL,
+  description   TEXT,
+  status        ENUM('pending', 'completed') DEFAULT 'pending',
+  priority      ENUM('low', 'medium', 'high') DEFAULT 'medium',
+  kanban_status ENUM('todo', 'inprogress', 'done') DEFAULT 'todo',
+  project       VARCHAR(100) DEFAULT NULL,
+  due_date      DATE,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL
+);
 
 -- ============================================================
 -- FEEDBACK
@@ -142,7 +101,6 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 -- ============================================================
 -- PASSWORD RESETS
--- token_hash: SHA-256 hash of the raw token sent to the user
 -- ============================================================
 CREATE TABLE IF NOT EXISTS password_resets (
   id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -157,7 +115,6 @@ CREATE TABLE IF NOT EXISTS password_resets (
 
 -- ============================================================
 -- REFRESH TOKENS
--- token_hash: SHA-256 hash of the raw refresh token (raw token stored in httpOnly cookie)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id         INT AUTO_INCREMENT PRIMARY KEY,
