@@ -21,7 +21,9 @@ const httpServer = http.createServer(app);
 initSocket(httpServer);
 
 const PORT = process.env.PORT || 3001;
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim());
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -32,7 +34,13 @@ app.use(helmet({
     },
   },
 }));
-app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true,
+}));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
 app.use(cookieParser());
