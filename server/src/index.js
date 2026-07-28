@@ -5,6 +5,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 require("dotenv").config();
 
 const { testConnection } = require("./config/database");
@@ -21,7 +23,15 @@ initSocket(httpServer);
 const PORT = process.env.PORT || 3001;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "script-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "data:", "validator.swagger.io"],
+    },
+  },
+}));
 app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
@@ -40,8 +50,12 @@ app.use("/uploads", (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, "../uploads")));
 
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: "TaskFlow API Docs",
+}));
+
 app.get("/", (req, res) => {
-  res.json({ message: "🚀 TaskFlow API is running!" });
+  res.json({ message: "🚀 TaskFlow API is running!", docs: "http://localhost:3001/api/docs" });
 });
 
 app.use(errorHandler);

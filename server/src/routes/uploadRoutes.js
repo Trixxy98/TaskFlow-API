@@ -6,7 +6,6 @@ const fs = require("fs");
 const auth = require("../middleware/authMiddleware");
 const { db } = require("../config/database");
 
-// Setup storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, "../../uploads");
@@ -31,12 +30,60 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 router.use(auth);
 
-// POST /api/upload/:taskId — upload file
+/**
+ * @swagger
+ * tags:
+ *   name: Uploads
+ *   description: File attachment endpoints
+ */
+
+/**
+ * @swagger
+ * /api/upload/{taskId}:
+ *   post:
+ *     summary: Upload a file attachment for a task
+ *     tags: [Uploads]
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema: { type: integer }
+ *         description: Task ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [file]
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image (JPG, PNG, GIF, WEBP) or PDF, max 5MB
+ *     responses:
+ *       201:
+ *         description: File uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   $ref: '#/components/schemas/Attachment'
+ *       400:
+ *         description: No file uploaded or invalid file type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post("/:taskId", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "Tiada file diupload" });
@@ -65,7 +112,32 @@ router.post("/:taskId", upload.single("file"), async (req, res) => {
   }
 });
 
-// GET /api/upload/:taskId — get attachments for task
+/**
+ * @swagger
+ * /api/upload/{taskId}:
+ *   get:
+ *     summary: Get all attachments for a task
+ *     tags: [Uploads]
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema: { type: integer }
+ *         description: Task ID
+ *     responses:
+ *       200:
+ *         description: List of attachments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Attachment'
+ */
 router.get("/:taskId", async (req, res) => {
   try {
     const [attachments] = await db.query(
@@ -79,13 +151,37 @@ router.get("/:taskId", async (req, res) => {
   }
 });
 
-// DELETE /api/upload/file/:id — delete attachment
+/**
+ * @swagger
+ * /api/upload/file/{id}:
+ *   delete:
+ *     summary: Delete a file attachment
+ *     tags: [Uploads]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *         description: Attachment ID
+ *     responses:
+ *       200:
+ *         description: File deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       404:
+ *         description: File not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.delete("/file/:id", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM task_attachments WHERE id = ?", [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ success: false, message: "File tidak dijumpai" });
 
-    // Delete file dari disk
     const filePath = path.join(__dirname, "../../uploads", rows[0].filename);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
