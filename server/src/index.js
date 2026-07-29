@@ -54,7 +54,7 @@ app.use("/api/upload", require("./routes/uploadRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/ai", require("./routes/aiRoutes"));
 app.use("/uploads", (req, res, next) => {
-  res.header("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  res.header("Access-Control-Allow-Origin", ALLOWED_ORIGINS[0]);
   next();
 }, express.static(path.join(__dirname, "../uploads")));
 
@@ -75,4 +75,7 @@ const startServer = async () => {
   });
 };
 
-startServer();
+startServer().catch((err) => {
+  console.error("❌ Server startup failed:", err);
+  process.exit(1);
+});
