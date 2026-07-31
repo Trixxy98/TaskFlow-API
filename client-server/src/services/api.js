@@ -25,8 +25,8 @@ const attemptRefresh = async () => {
 };
 
 /**
- * Wrapper untuk semua API calls yang memerlukan auth.
- * Secara automatik refresh access token apabila 401 diterima.
+ * Wrapper for every API call that requires auth.
+ * Automatically refreshes the access token when a 401 is received.
  */
 const fetchWithAuth = async (url, options = {}) => {
   const authHeaders = {
@@ -75,7 +75,7 @@ const fetchWithAuth = async (url, options = {}) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.location.href = "/login";
-    return new Response(JSON.stringify({ success: false, message: "Sesi tamat. Sila login semula." }), {
+    return new Response(JSON.stringify({ success: false, message: "Session expired. Please sign in again." }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });

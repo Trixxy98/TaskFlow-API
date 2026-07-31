@@ -6,18 +6,18 @@ const STATUS = ["pending", "completed"];
 
 const createTask = Joi.object({
   title: Joi.string().min(1).max(255).trim().required().messages({
-    "string.empty": "Tajuk task tidak boleh kosong",
-    "any.required": "Tajuk task diperlukan",
+    "string.empty": "Task title cannot be empty",
+    "any.required": "Task title is required",
   }),
   description: Joi.string().allow("", null).optional(),
   due_date: Joi.date().iso().allow(null).optional().messages({
-    "date.format": "Format tarikh tidak sah. Guna format YYYY-MM-DD",
+    "date.format": "Invalid date format. Use the YYYY-MM-DD format",
   }),
   priority: Joi.string().valid(...PRIORITY).default("medium").messages({
-    "any.only": `Keutamaan mesti salah satu daripada: ${PRIORITY.join(", ")}`,
+    "any.only": `Priority must be one of: ${PRIORITY.join(", ")}`,
   }),
   kanban_status: Joi.string().valid(...KANBAN_STATUS).default("todo").messages({
-    "any.only": `Status Kanban mesti salah satu daripada: ${KANBAN_STATUS.join(", ")}`,
+    "any.only": `Kanban status must be one of: ${KANBAN_STATUS.join(", ")}`,
   }),
   project: Joi.string().max(100).allow("", null).optional(),
 });
@@ -26,20 +26,20 @@ const updateTask = Joi.object({
   title: Joi.string().min(1).max(255).trim().optional(),
   description: Joi.string().allow("", null).optional(),
   status: Joi.string().valid(...STATUS).optional().messages({
-    "any.only": `Status mesti salah satu daripada: ${STATUS.join(", ")}`,
+    "any.only": `Status must be one of: ${STATUS.join(", ")}`,
   }),
   due_date: Joi.date().iso().allow(null).optional().messages({
-    "date.format": "Format tarikh tidak sah. Guna format YYYY-MM-DD",
+    "date.format": "Invalid date format. Use the YYYY-MM-DD format",
   }),
   priority: Joi.string().valid(...PRIORITY).optional().messages({
-    "any.only": `Keutamaan mesti salah satu daripada: ${PRIORITY.join(", ")}`,
+    "any.only": `Priority must be one of: ${PRIORITY.join(", ")}`,
   }),
   kanban_status: Joi.string().valid(...KANBAN_STATUS).optional().messages({
-    "any.only": `Status Kanban mesti salah satu daripada: ${KANBAN_STATUS.join(", ")}`,
+    "any.only": `Kanban status must be one of: ${KANBAN_STATUS.join(", ")}`,
   }),
   project: Joi.string().max(100).allow("", null).optional(),
 }).min(1).messages({
-  "object.min": "Sekurang-kurangnya satu field perlu disertakan untuk kemaskini",
+  "object.min": "At least one field must be provided to update",
 });
 
 module.exports = { createTask, updateTask };

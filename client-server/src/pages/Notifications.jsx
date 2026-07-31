@@ -51,10 +51,10 @@ export default function Notifications({ tasks, onUnreadChange }) {
     const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now - date) / 1000);
-    if (diff < 60) return "Baru sahaja";
-    if (diff < 3600) return `${Math.floor(diff / 60)} minit lepas`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} jam lepas`;
-    return date.toLocaleDateString("ms-MY", { day: "numeric", month: "short" });
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   };
 
   // Task-based notifications
@@ -64,9 +64,9 @@ export default function Notifications({ tasks, onUnreadChange }) {
     .map((t) => {
       const due = new Date(t.due_date); due.setHours(0, 0, 0, 0);
       const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-      if (diff < 0) return { id: `task-${t.id}`, type: "task_overdue", title: "Task Overdue!", message: `"${t.title}" dah lepas tarikh akhir ${Math.abs(diff)} hari lepas`, is_read: false, created_at: new Date().toISOString() };
-      if (diff === 0) return { id: `task-${t.id}`, type: "task_due_today", title: "Due Hari Ini!", message: `"${t.title}" perlu disiapkan hari ini`, is_read: false, created_at: new Date().toISOString() };
-      if (diff === 1) return { id: `task-${t.id}`, type: "task_due_tomorrow", title: "Due Esok", message: `"${t.title}" perlu disiapkan esok`, is_read: false, created_at: new Date().toISOString() };
+      if (diff < 0) return { id: `task-${t.id}`, type: "task_overdue", title: "Task Overdue!", message: `"${t.title}" passed its deadline ${Math.abs(diff)} days ago`, is_read: false, created_at: new Date().toISOString() };
+      if (diff === 0) return { id: `task-${t.id}`, type: "task_due_today", title: "Due Today!", message: `"${t.title}" needs to be completed today`, is_read: false, created_at: new Date().toISOString() };
+      if (diff === 1) return { id: `task-${t.id}`, type: "task_due_tomorrow", title: "Due Tomorrow", message: `"${t.title}" needs to be completed tomorrow`, is_read: false, created_at: new Date().toISOString() };
       return null;
     })
     .filter(Boolean);
@@ -82,7 +82,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Notifications</h2>
           <p className="text-gray-400 text-sm mt-1">
-            {unread.length > 0 ? `${unread.length} belum dibaca` : "Semua dah dibaca ✓"}
+            {unread.length > 0 ? `${unread.length} unread` : "All caught up ✓"}
           </p>
         </div>
         {unread.length > 0 && (
@@ -107,7 +107,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
                 : "bg-white dark:bg-gray-900 text-gray-400 border border-gray-200 dark:border-gray-700"
             }`}
           >
-            {tab === "all" ? "Semua" : `Belum Baca ${unread.length > 0 ? `(${unread.length})` : ""}`}
+            {tab === "all" ? "All" : `Unread ${unread.length > 0 ? `(${unread.length})` : ""}`}
           </button>
         ))}
       </div>
@@ -121,7 +121,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
         <div className="text-center py-20">
           <p className="text-4xl mb-3">🔔</p>
           <p className="text-gray-400 text-sm">
-            {activeTab === "unread" ? "Tiada notifikasi belum dibaca" : "Tiada notifikasi"}
+            {activeTab === "unread" ? "No unread notifications" : "No notifications"}
           </p>
         </div>
       ) : (

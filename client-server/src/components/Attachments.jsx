@@ -78,7 +78,7 @@ export default function Attachments({ taskId }) {
           </div>
         ) : (
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            📎 Drop file di sini atau <span className="text-indigo-500">browse</span>
+            📎 Drop a file here or <span className="text-indigo-500">browse</span>
             <br />
             <span className="text-gray-300 dark:text-gray-600">JPG, PNG, GIF, WEBP, PDF • Max 5MB</span>
           </p>

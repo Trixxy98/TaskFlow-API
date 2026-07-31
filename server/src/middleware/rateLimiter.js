@@ -1,9 +1,9 @@
 const rateLimit = require("express-rate-limit");
 
 /**
- * Untuk auth endpoints (login, register).
- * Had: 10 request setiap 15 minit per IP.
- * Elakkan brute-force serangan ke atas kata laluan.
+ * For auth endpoints (login, register).
+ * Limit: 10 requests per 15 minutes per IP.
+ * Prevents brute-force attacks against passwords.
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -12,13 +12,13 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: {
     success: false,
-    message: "Terlalu banyak percubaan. Sila cuba lagi selepas 15 minit.",
+    message: "Too many attempts. Please try again in 15 minutes.",
   },
 });
 
 /**
- * Untuk semua API endpoint umum.
- * Had: 100 request setiap 1 minit per IP.
+ * For all general API endpoints.
+ * Limit: 100 requests per minute per IP.
  */
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -27,7 +27,7 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
   message: {
     success: false,
-    message: "Terlalu banyak request. Sila cuba lagi sebentar.",
+    message: "Too many requests. Please try again shortly.",
   },
 });
 

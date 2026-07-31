@@ -21,7 +21,7 @@ export default function Search({ tasks, onToggle, onDelete }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return null;
-    return new Date(dateStr).toLocaleDateString("ms-MY", {
+    return new Date(dateStr).toLocaleDateString("en-GB", {
       day: "numeric", month: "short", year: "numeric",
     });
   };
@@ -30,14 +30,14 @@ export default function Search({ tasks, onToggle, onDelete }) {
     <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
       <div className="mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Search</h2>
-        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Cari task anda</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Search your tasks</p>
       </div>
 
       <div className="relative mb-6">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600">⌕</span>
         <input
           type="text"
-          placeholder="Taip untuk cari..."
+          placeholder="Type to search..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
@@ -48,16 +48,16 @@ export default function Search({ tasks, onToggle, onDelete }) {
       {query === "" ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-3">⌕</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Taip sesuatu untuk mula cari</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Type something to start searching</p>
         </div>
       ) : results.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-3">🔍</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Tiada task dijumpai untuk "{query}"</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">No tasks found for &quot;{query}&quot;</p>
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">{results.length} result dijumpai</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">{results.length} results found</p>
           {results.map((task) => (
             <div
               key={task.id}

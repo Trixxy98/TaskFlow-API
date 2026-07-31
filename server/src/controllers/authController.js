@@ -38,12 +38,12 @@ const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "Semua field diperlukan" });
+      return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     const [existing] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: "Email sudah didaftarkan" });
+      return res.status(400).json({ success: false, message: "Email is already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,7 +54,7 @@ const register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Akaun berjaya didaftarkan",
+      message: "Account created successfully",
       data: { id: result.insertId, name, email },
     });
   } catch (error) {
@@ -66,18 +66,18 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email dan password diperlukan" });
+      return res.status(400).json({ success: false, message: "Email and password are required" });
     }
 
     const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
     if (users.length === 0) {
-      return res.status(401).json({ success: false, message: "Email atau password salah" });
+      return res.status(401).json({ success: false, message: "Incorrect email or password" });
     }
 
     const user = users[0];
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Email atau password salah" });
+      return res.status(401).json({ success: false, message: "Incorrect email or password" });
     }
 
     const accessToken = jwt.sign(
@@ -91,7 +91,7 @@ const login = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Login berjaya",
+      message: "Signed in successfully",
       data: {
         token: accessToken,
         user: { id: user.id, name: user.name, email: user.email },
@@ -106,7 +106,7 @@ const refreshAccessToken = async (req, res) => {
   try {
     const rawToken = req.cookies?.refreshToken;
     if (!rawToken) {
-      return res.status(401).json({ success: false, message: "Refresh token tidak dijumpai" });
+      return res.status(401).json({ success: false, message: "Refresh token not found" });
     }
 
     const tokenHash = hashToken(rawToken);
@@ -117,13 +117,13 @@ const refreshAccessToken = async (req, res) => {
 
     if (rows.length === 0) {
       res.clearCookie("refreshToken", COOKIE_OPTIONS);
-      return res.status(401).json({ success: false, message: "Refresh token tidak sah atau telah tamat" });
+      return res.status(401).json({ success: false, message: "Refresh token is invalid or has expired" });
     }
 
     const storedToken = rows[0];
     const [userRows] = await db.query("SELECT id, name, email FROM users WHERE id = ?", [storedToken.user_id]);
     if (userRows.length === 0) {
-      return res.status(401).json({ success: false, message: "User tidak dijumpai" });
+      return res.status(401).json({ success: false, message: "User not found" });
     }
 
     const user = userRows[0];
@@ -152,7 +152,7 @@ const logout = async (req, res) => {
       await db.query("DELETE FROM refresh_tokens WHERE token_hash = ?", [tokenHash]);
     }
     res.clearCookie("refreshToken", COOKIE_OPTIONS);
-    res.json({ success: true, message: "Logout berjaya" });
+    res.json({ success: true, message: "Signed out successfully" });
   } catch (error) {
     return sendServerError(res, error);
   }
@@ -165,7 +165,7 @@ const forgotPassword = async (req, res) => {
     const [users] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
 
     // Always respond with success to prevent email enumeration attacks
-    const genericMessage = "Jika email anda berdaftar, satu pautan reset akan dihantar.";
+    const genericMessage = "If your email is registered, a reset link will be sent to you.";
 
     if (users.length === 0) {
       return res.json({ success: true, message: genericMessage });
@@ -208,7 +208,7 @@ const resetPassword = async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(400).json({ success: false, message: "Token tidak sah atau telah tamat tempoh." });
+      return res.status(400).json({ success: false, message: "Token is invalid or has expired." });
     }
 
     const { user_id } = rows[0];
@@ -220,7 +220,7 @@ const resetPassword = async (req, res) => {
     await db.query("DELETE FROM password_resets WHERE user_id = ?", [user_id]);
     await db.query("DELETE FROM refresh_tokens WHERE user_id = ?", [user_id]);
 
-    res.json({ success: true, message: "Kata laluan berjaya ditukar. Sila log masuk semula." });
+    res.json({ success: true, message: "Password changed successfully. Please sign in again." });
   } catch (error) {
     return sendServerError(res, error);
   }

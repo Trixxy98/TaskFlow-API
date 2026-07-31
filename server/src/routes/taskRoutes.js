@@ -76,10 +76,10 @@ router.get("/", taskController.getAllTasks);
  *             properties:
  *               title:
  *                 type: string
- *                 example: Siapkan laporan bulanan
+ *                 example: Finish the monthly report
  *               description:
  *                 type: string
- *                 example: Laporan untuk bulan Julai
+ *                 example: Report for the month of July
  *               priority:
  *                 type: string
  *                 enum: [low, medium, high]
