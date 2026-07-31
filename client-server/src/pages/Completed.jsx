@@ -3,7 +3,7 @@ export default function Completed({ tasks, onToggle, onDelete }) {
   
     const formatDate = (dateStr) => {
       if (!dateStr) return null;
-      return new Date(dateStr).toLocaleDateString("ms-MY", {
+      return new Date(dateStr).toLocaleDateString("en-GB", {
         day: "numeric", month: "short", year: "numeric",
       });
     };
@@ -12,13 +12,13 @@ export default function Completed({ tasks, onToggle, onDelete }) {
       <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
         <div className="mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Completed</h2>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{completedTasks.length} task selesai</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{completedTasks.length} tasks completed</p>
         </div>
   
         {completedTasks.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-3">🎯</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm">Belum ada task yang selesai</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm">No completed tasks yet</p>
           </div>
         ) : (
           <div className="space-y-2">

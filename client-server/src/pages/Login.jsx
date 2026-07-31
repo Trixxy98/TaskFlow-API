@@ -30,7 +30,7 @@ export default function Login({ onLogin }) {
         <div className="text-center mb-10">
           <span className="text-4xl">✦</span>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-3 tracking-tight">TaskFlow</h1>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Log masuk untuk teruskan</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Sign in to continue</p>
         </div>
 
         {error && (
@@ -44,7 +44,7 @@ export default function Login({ onLogin }) {
             <label className="block text-xs text-gray-400 dark:text-gray-500 mb-1.5 font-medium">Email</label>
             <input
               type="email"
-              placeholder="anda@email.com"
+              placeholder="you@email.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 transition"
@@ -60,7 +60,7 @@ export default function Login({ onLogin }) {
                 onClick={() => navigate("/forgot-password")}
                 className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
               >
-                Lupa password?
+                Forgot password?
               </button>
             </div>
             <input
@@ -78,14 +78,14 @@ export default function Login({ onLogin }) {
             disabled={loading}
             className="w-full bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm disabled:opacity-50 mt-2"
           >
-            {loading ? "Loading..." : "Log Masuk"}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
         <p className="text-gray-400 dark:text-gray-500 text-xs text-center mt-6">
-          Belum ada akaun?{" "}
+          Don&apos;t have an account?{" "}
           <button onClick={() => navigate("/register")} className="text-gray-900 dark:text-blue-400 font-medium hover:underline">
-            Daftar sekarang
+            Sign up now
           </button>
         </p>
       </div>

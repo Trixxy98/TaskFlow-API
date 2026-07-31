@@ -43,8 +43,8 @@ const options = {
           properties: {
             id: { type: "integer", example: 1 },
             user_id: { type: "integer", example: 1 },
-            title: { type: "string", example: "Siapkan laporan bulanan" },
-            description: { type: "string", example: "Laporan untuk bulan Julai" },
+            title: { type: "string", example: "Finish the monthly report" },
+            description: { type: "string", example: "Report for the month of July" },
             status: { type: "string", enum: ["pending", "completed"], example: "pending" },
             priority: { type: "string", enum: ["low", "medium", "high"], example: "high" },
             due_date: { type: "string", format: "date", example: "2026-07-31" },

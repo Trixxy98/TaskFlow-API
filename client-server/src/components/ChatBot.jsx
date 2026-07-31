@@ -4,7 +4,7 @@ import { sendChatMessage } from "../services/api";
 export default function ChatBot({ onTasksUpdated, user }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "model", text: `Hai ${user?.name?.split(" ")[0] || ""}! Saya TaskFlow AI. Apa yang boleh saya bantu?` },
+    { role: "model", text: `Hi ${user?.name?.split(" ")[0] || ""}! I'm TaskFlow AI. How can I help you today?` },
   ]);
   const [chatHistory, setChatHistory] = useState([]);
   const [input, setInput] = useState("");
@@ -27,7 +27,7 @@ export default function ChatBot({ onTasksUpdated, user }) {
     try {
       res = await sendChatMessage(text, chatHistory);
     } catch {
-      setMessages((prev) => [...prev, { role: "error", text: "Gagal sambung ke server. Cuba lagi." }]);
+      setMessages((prev) => [...prev, { role: "error", text: "Failed to connect to the server. Please try again." }]);
       setLoading(false);
       return;
     }
@@ -44,14 +44,14 @@ export default function ChatBot({ onTasksUpdated, user }) {
       );
       if (taskChanged) onTasksUpdated?.();
     } else {
-      const errorText = res.message || "Ralat berlaku. Cuba lagi.";
+      const errorText = res.message || "An error occurred. Please try again.";
       setMessages((prev) => [...prev, { role: "error", text: errorText }]);
     }
     setLoading(false);
   };
 
   const handleClear = () => {
-    setMessages([{ role: "model", text: "Chat dibersihkan. Ada apa yang boleh saya bantu?" }]);
+    setMessages([{ role: "model", text: "Chat cleared. What can I help you with?" }]);
     setChatHistory([]);
   };
 
@@ -123,7 +123,7 @@ export default function ChatBot({ onTasksUpdated, user }) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-                placeholder="Tanya atau buat task..."
+                placeholder="Ask a question or create a task..."
                 className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm px-3 py-2 rounded-xl outline-none placeholder-gray-400 dark:placeholder-gray-500"
               />
               <button

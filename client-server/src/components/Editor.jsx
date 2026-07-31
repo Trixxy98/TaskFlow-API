@@ -18,7 +18,7 @@ const ToolbarButton = ({ onClick, active, title, children }) => (
   </button>
 );
 
-export default function Editor({ content, onChange, placeholder = "Mula taip di sini..." }) {
+export default function Editor({ content, onChange, placeholder = "Start typing here..." }) {
   const editor = useEditor({
     extensions: [
       StarterKit,

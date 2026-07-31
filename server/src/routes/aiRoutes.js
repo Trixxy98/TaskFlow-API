@@ -27,11 +27,11 @@ router.use(auth);
  *     tags: [AI]
  *     description: |
  *       Natural language interface for task management. The AI can:
- *       - List tasks (`tunjuk semua task aku`)
- *       - Create tasks (`tambah task meeting esok priority high`)
- *       - Update tasks (`tandakan task X sebagai selesai`)
- *       - Delete tasks (`padam task beli barang`)
- *       - List projects (`tunjuk semua project`)
+ *       - List tasks (`show me all my tasks`)
+ *       - Create tasks (`add a meeting task tomorrow with high priority`)
+ *       - Update tasks (`mark task X as completed`)
+ *       - Delete tasks (`delete the grocery shopping task`)
+ *       - List projects (`show me all projects`)
  *
  *       Rate limited to **15 requests per minute** per user.
  *     requestBody:
@@ -44,7 +44,7 @@ router.use(auth);
  *             properties:
  *               message:
  *                 type: string
- *                 example: tambah task hantar laporan esok priority high
+ *                 example: add a task to submit the report tomorrow with high priority
  *               history:
  *                 type: array
  *                 description: Previous conversation turns for context
@@ -72,7 +72,7 @@ router.use(auth);
  *                 success: { type: boolean, example: true }
  *                 reply:
  *                   type: string
- *                   example: Tugasan "hantar laporan" telah berjaya ditambahkan untuk esok.
+ *                   example: The task "submit the report" has been added for tomorrow.
  *                 actions:
  *                   type: array
  *                   description: List of tool calls executed by the AI

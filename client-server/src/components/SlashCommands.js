@@ -5,16 +5,16 @@ import tippy from "tippy.js";
 import SlashCommandsList from "./SlashCommandsList.jsx";
 
 const COMMANDS = [
-  { title: "Heading 1", description: "Tajuk besar", icon: "H1", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run() },
-  { title: "Heading 2", description: "Tajuk sederhana", icon: "H2", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run() },
-  { title: "Heading 3", description: "Tajuk kecil", icon: "H3", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run() },
-  { title: "Bullet List", description: "Senarai bertanda", icon: "•", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBulletList().run() },
-  { title: "Numbered List", description: "Senarai bernombor", icon: "1.", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleOrderedList().run() },
-  { title: "Blockquote", description: "Petikan teks", icon: "❝", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBlockquote().run() },
-  { title: "Code Block", description: "Blok kod", icon: "</>", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
-  { title: "Divider", description: "Garis pemisah", icon: "—", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
-  { title: "Bold", description: "Teks tebal", icon: "B", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBold().run() },
-  { title: "Italic", description: "Teks condong", icon: "I", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleItalic().run() },
+  { title: "Heading 1", description: "Large heading", icon: "H1", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run() },
+  { title: "Heading 2", description: "Medium heading", icon: "H2", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run() },
+  { title: "Heading 3", description: "Small heading", icon: "H3", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run() },
+  { title: "Bullet List", description: "Bulleted list", icon: "•", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBulletList().run() },
+  { title: "Numbered List", description: "Numbered list", icon: "1.", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleOrderedList().run() },
+  { title: "Blockquote", description: "Quoted text", icon: "❝", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBlockquote().run() },
+  { title: "Code Block", description: "Block of code", icon: "</>", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
+  { title: "Divider", description: "Horizontal divider", icon: "—", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
+  { title: "Bold", description: "Bold text", icon: "B", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBold().run() },
+  { title: "Italic", description: "Italic text", icon: "I", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleItalic().run() },
 ];
 
 export default Extension.create({

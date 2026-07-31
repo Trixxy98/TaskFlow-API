@@ -6,8 +6,8 @@ export default function Profile({ user, tasks, onLogout }) {
     const highCount = tasks.filter((t) => t.priority === "high" && t.status !== "completed").length;
   
     const stats = [
-      { label: "Total Task", value: tasks.length, color: "text-gray-900 dark:text-gray-100" },
-      { label: "Selesai", value: completed, color: "text-emerald-500" },
+      { label: "Total Tasks", value: tasks.length, color: "text-gray-900 dark:text-gray-100" },
+      { label: "Completed", value: completed, color: "text-emerald-500" },
       { label: "Pending", value: pending, color: "text-amber-500" },
       { label: "High Priority", value: highCount, color: "text-red-500" },
     ];
@@ -16,7 +16,7 @@ export default function Profile({ user, tasks, onLogout }) {
       <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
         <div className="mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Profile</h2>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Maklumat akaun anda</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Your account information</p>
         </div>
   
         {/* Profile Card */}
@@ -63,7 +63,7 @@ export default function Profile({ user, tasks, onLogout }) {
           onClick={onLogout}
           className="w-full border border-red-100 dark:border-red-900/50 text-red-400 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 py-3 rounded-2xl text-sm font-medium transition"
         >
-          Log Keluar
+          Sign Out
         </button>
       </div>
     );

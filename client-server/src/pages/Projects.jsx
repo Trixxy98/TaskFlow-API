@@ -54,7 +54,7 @@ export default function Projects({ tasks, setTasks }) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Projects</h2>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{projects.length} projek aktif</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{projects.length} active projects</p>
         </div>
         <button onClick={() => setShowForm(true)} className="bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-xl transition font-medium">
           + New Project
@@ -64,14 +64,14 @@ export default function Projects({ tasks, setTasks }) {
       {/* Create Form */}
       {showForm && (
         <form onSubmit={handleCreate} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5 mb-6">
-          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">Project Baru</h3>
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">New Project</h3>
           <input
-            autoFocus type="text" placeholder="Nama project..."
+            autoFocus type="text" placeholder="Project name..."
             value={newName} onChange={(e) => setNewName(e.target.value)}
             className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 mb-3"
           />
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs text-gray-400 dark:text-gray-500">Warna:</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Color:</span>
             {COLORS.map((c) => (
               <button key={c} type="button" onClick={() => setNewColor(c)}
                 className={`w-6 h-6 rounded-full transition ${newColor === c ? "ring-2 ring-offset-2 ring-gray-400" : ""}`}
@@ -81,10 +81,10 @@ export default function Projects({ tasks, setTasks }) {
           </div>
           <div className="flex gap-2">
             <button type="submit" className="bg-gray-900 dark:bg-blue-600 text-white text-xs px-5 py-2 rounded-full hover:bg-gray-700 dark:hover:bg-blue-500 transition font-medium">
-              Simpan
+              Save
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-xs px-5 py-2 rounded-full hover:border-gray-400 dark:hover:border-gray-500 transition">
-              Batal
+              Cancel
             </button>
           </div>
         </form>
@@ -107,7 +107,7 @@ export default function Projects({ tasks, setTasks }) {
                     <span className="text-xs text-gray-400 dark:text-gray-500">{ptasks.length} tasks</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{done}/{ptasks.length} selesai</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{done}/{ptasks.length} completed</span>
                     <button onClick={() => handleDelete(project.id)} className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition text-sm">✕</button>
                   </div>
                 </div>
@@ -115,7 +115,7 @@ export default function Projects({ tasks, setTasks }) {
                   <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: project.color }} />
                 </div>
                 {ptasks.length === 0 ? (
-                  <p className="text-xs text-gray-300 dark:text-gray-600 text-center py-2">Tiada task dalam project ini</p>
+                  <p className="text-xs text-gray-300 dark:text-gray-600 text-center py-2">No tasks in this project</p>
                 ) : (
                   <div className="space-y-2">
                     {ptasks.map((task) => (
@@ -156,7 +156,7 @@ export default function Projects({ tasks, setTasks }) {
           {projects.length === 0 && unassigned.length === 0 && (
             <div className="text-center py-20">
               <p className="text-4xl mb-3">📁</p>
-              <p className="text-gray-400 dark:text-gray-500 text-sm">Tiada task lagi. Tambah task dulu!</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">No tasks yet. Add a task first!</p>
             </div>
           )}
         </div>

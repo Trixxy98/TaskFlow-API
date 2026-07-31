@@ -7,7 +7,7 @@ export default function NotionPages() {
   const [pages, setPages] = useState(() => {
     const saved = localStorage.getItem("notion_pages");
     return saved ? JSON.parse(saved) : [
-      { id: 1, title: "Welcome to TaskFlow Notes", emoji: "👋", content: "<h2>Selamat Datang!</h2><p>Ini adalah halaman pertama anda. Klik untuk mula menulis...</p>", updatedAt: new Date().toISOString() }
+      { id: 1, title: "Welcome to TaskFlow Notes", emoji: "👋", content: "<h2>Welcome!</h2><p>This is your first page. Click here to start writing...</p>", updatedAt: new Date().toISOString() }
     ];
   });
 
@@ -48,7 +48,7 @@ export default function NotionPages() {
   };
 
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString("ms-MY", { day: "numeric", month: "short", year: "numeric" });
+    return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   };
 
   return (
@@ -62,7 +62,7 @@ export default function NotionPages() {
 
         <div className="flex-1 overflow-y-auto py-2">
           {pages.length === 0 ? (
-            <p className="text-xs text-gray-300 dark:text-gray-600 text-center py-6 px-4">Tiada page lagi</p>
+            <p className="text-xs text-gray-300 dark:text-gray-600 text-center py-6 px-4">No pages yet</p>
           ) : (
             pages.map((page) => (
               <div
@@ -95,7 +95,7 @@ export default function NotionPages() {
         {!currentPage ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <p className="text-5xl mb-4">📄</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mb-4">Pilih page atau buat yang baru</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mb-4">Select a page or create a new one</p>
             <button onClick={createPage} className="bg-gray-900 dark:bg-blue-600 text-white text-sm px-5 py-2 rounded-xl hover:bg-gray-700 dark:hover:bg-blue-500 transition">
               + New Page
             </button>
@@ -106,7 +106,7 @@ export default function NotionPages() {
             <button
               onClick={() => changeEmoji(currentPage.id)}
               className="text-5xl mb-4 hover:opacity-70 transition block"
-              title="Klik untuk tukar emoji"
+              title="Click to change emoji"
             >
               {currentPage.emoji}
             </button>
@@ -131,7 +131,7 @@ export default function NotionPages() {
               </h1>
             )}
 
-            <p className="text-xs text-gray-300 dark:text-gray-600 mb-8">Dikemaskini {formatDate(currentPage.updatedAt)}</p>
+            <p className="text-xs text-gray-300 dark:text-gray-600 mb-8">Updated {formatDate(currentPage.updatedAt)}</p>
 
             {/* Divider */}
             <div className="border-t border-gray-100 dark:border-gray-800 mb-8" />
@@ -140,7 +140,7 @@ export default function NotionPages() {
             <Editor
               content={currentPage.content}
               onChange={(html) => updatePage(currentPage.id, { content: html })}
-              placeholder="Mula taip... Guna toolbar di atas untuk format teks anda."
+              placeholder="Start typing... Use the toolbar above to format your text."
             />
           </div>
         )}

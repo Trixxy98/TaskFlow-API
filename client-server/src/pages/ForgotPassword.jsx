@@ -17,7 +17,7 @@ export default function ForgotPassword() {
     if (res.success) {
       setResult(res);
     } else {
-      setError(res.message || "Ralat berlaku. Sila cuba lagi.");
+      setError(res.message || "An error occurred. Please try again.");
     }
     setLoading(false);
   };
@@ -28,7 +28,7 @@ export default function ForgotPassword() {
         <div className="text-center mb-10">
           <span className="text-4xl">✦</span>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-3 tracking-tight">TaskFlow</h1>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Reset kata laluan anda</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Reset your password</p>
         </div>
 
         {error && (
@@ -47,7 +47,7 @@ export default function ForgotPassword() {
             {result.devResetUrl && (
               <div className="space-y-2">
                 <p className="text-xs text-gray-400 dark:text-gray-500 text-center font-medium">
-                  [DEV MODE] Pautan reset:
+                  [DEV MODE] Reset link:
                 </p>
                 <a
                   href={result.devResetUrl}
@@ -62,7 +62,7 @@ export default function ForgotPassword() {
               onClick={() => navigate("/login")}
               className="w-full bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm"
             >
-              Kembali ke Log Masuk
+              Back to Sign In
             </button>
           </div>
         ) : (
@@ -71,14 +71,14 @@ export default function ForgotPassword() {
               <label className="block text-xs text-gray-400 dark:text-gray-500 mb-1.5 font-medium">Email</label>
               <input
                 type="email"
-                placeholder="anda@email.com"
+                placeholder="you@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 transition"
                 required
               />
               <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">
-                Masukkan email yang berdaftar. Pautan reset akan dihantar.
+                Enter your registered email. A reset link will be sent to you.
               </p>
             </div>
 
@@ -87,18 +87,18 @@ export default function ForgotPassword() {
               disabled={loading}
               className="w-full bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm disabled:opacity-50 mt-2"
             >
-              {loading ? "Menghantar..." : "Hantar Pautan Reset"}
+              {loading ? "Sending..." : "Send Reset Link"}
             </button>
           </form>
         )}
 
         <p className="text-gray-400 dark:text-gray-500 text-xs text-center mt-6">
-          Ingat kata laluan?{" "}
+          Remember your password?{" "}
           <button
             onClick={() => navigate("/login")}
             className="text-gray-900 dark:text-blue-400 font-medium hover:underline"
           >
-            Log masuk
+            Sign in
           </button>
         </p>
       </div>

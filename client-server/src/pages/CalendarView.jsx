@@ -31,8 +31,8 @@ export default function CalendarView({ tasks }) {
     return today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
   };
 
-  const monthName = currentMonth.toLocaleDateString("ms-MY", { month: "long", year: "numeric" });
-  const dayNames = ["Ahd", "Isn", "Sel", "Rab", "Kha", "Jum", "Sab"];
+  const monthName = currentMonth.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const [selectedDay, setSelectedDay] = useState(null);
   const selectedTasks = selectedDay ? getTasksForDay(selectedDay) : [];
@@ -41,7 +41,7 @@ export default function CalendarView({ tasks }) {
     <div className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full">
       <div className="mb-6">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Calendar</h2>
-        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Tasks mengikut tarikh</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Tasks by due date</p>
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5 mb-5">
@@ -101,11 +101,11 @@ export default function CalendarView({ tasks }) {
       {selectedDay && (
         <div>
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            Tasks pada {selectedDay} {currentMonth.toLocaleDateString("ms-MY", { month: "long", year: "numeric" })}
+            Tasks on {selectedDay} {currentMonth.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
           </h3>
           {selectedTasks.length === 0 ? (
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-6 text-center">
-              <p className="text-gray-400 dark:text-gray-500 text-sm">Tiada task pada hari ini</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">No tasks on this day</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -127,7 +127,7 @@ export default function CalendarView({ tasks }) {
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Upcoming Tasks</h3>
           {tasks.filter((t) => t.due_date && t.status !== "completed").length === 0 ? (
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-6 text-center">
-              <p className="text-gray-400 dark:text-gray-500 text-sm">Tiada upcoming tasks</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">No upcoming tasks</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function CalendarView({ tasks }) {
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${diff < 0 ? "bg-red-400" : diff === 0 ? "bg-amber-400" : "bg-indigo-400"}`} />
                       <span className="text-sm text-gray-800 dark:text-gray-100 flex-1">{task.title}</span>
                       <span className={`text-xs font-medium ${diff < 0 ? "text-red-500" : diff === 0 ? "text-amber-500" : "text-gray-400 dark:text-gray-500"}`}>
-                        {diff < 0 ? `${Math.abs(diff)}h lepas` : diff === 0 ? "Hari ini" : `${diff}h lagi`}
+                        {diff < 0 ? `${Math.abs(diff)}d overdue` : diff === 0 ? "Today" : `in ${diff}d`}
                       </span>
                     </div>
                   );

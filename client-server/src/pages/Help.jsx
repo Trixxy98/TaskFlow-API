@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 const FAQS = [
-  { q: "Macam mana nak tambah task baru?", a: "Pergi ke halaman Tasks, taip dalam kotak 'Apa yang perlu dibuat?' dan klik + Tambah." },
-  { q: "Boleh ke set priority untuk task?", a: "Ya! Masa tambah task, pilih priority (High/Medium/Low) dari dropdown. Boleh tukar bila-bila masa dengan klik pada task." },
-  { q: "Macam mana nak set due date?", a: "Masa tambah task, pilih tarikh dari date picker. Task yang overdue akan ditanda dengan warna merah." },
-  { q: "Macam mana nak assign task ke project?", a: "Pergi ke halaman Projects. Task yang belum ada project akan muncul di bahagian Unassigned Tasks." },
-  { q: "Macam mana nak edit task?", a: "Klik pada nama task untuk masuk edit mode. Boleh edit title, due date, dan priority." },
+  { q: "How do I add a new task?", a: "Go to the Tasks page, type in the 'What needs to be done?' box and click + Add." },
+  { q: "Can I set a priority for a task?", a: "Yes! When adding a task, pick a priority (High/Medium/Low) from the dropdown. You can change it any time by clicking the task." },
+  { q: "How do I set a due date?", a: "When adding a task, pick a date from the date picker. Overdue tasks are highlighted in red." },
+  { q: "How do I assign a task to a project?", a: "Go to the Projects page. Tasks without a project appear under the Unassigned Tasks section." },
+  { q: "How do I edit a task?", a: "Click the task name to enter edit mode. You can change the title, due date, and priority." },
 ];
 
 export default function Help() {
@@ -15,7 +15,7 @@ export default function Help() {
     <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
       <div className="mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Help Centre</h2>
-        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Soalan lazim tentang TaskFlow</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Frequently asked questions about TaskFlow</p>
       </div>
 
       <div className="space-y-2">
@@ -38,8 +38,8 @@ export default function Help() {
       </div>
 
       <div className="mt-8 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-5 text-center border border-indigo-100 dark:border-indigo-800">
-        <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300 mb-1">Masih ada soalan?</p>
-        <p className="text-xs text-indigo-400 dark:text-indigo-400">Email kami di support@taskflow.com</p>
+        <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300 mb-1">Still have questions?</p>
+        <p className="text-xs text-indigo-400 dark:text-indigo-400">Email us at support@taskflow.com</p>
       </div>
     </div>
   );

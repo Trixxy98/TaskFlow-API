@@ -5,19 +5,19 @@ import { registerUser } from "../services/api";
 const PASSWORD_RULES = [
   {
     test: (password) => password.length >= 8,
-    message: "Password mesti sekurang-kurangnya 8 aksara.",
+    message: "Password must be at least 8 characters long.",
   },
   {
     test: (password) => /[A-Z]/.test(password),
-    message: "Password mesti ada sekurang-kurangnya 1 huruf besar (A-Z).",
+    message: "Password must contain at least 1 uppercase letter (A-Z).",
   },
   {
     test: (password) => /[0-9]/.test(password),
-    message: "Password mesti ada sekurang-kurangnya 1 nombor.",
+    message: "Password must contain at least 1 number.",
   },
   {
     test: (password) => /[^A-Za-z0-9]/.test(password),
-    message: "Password mesti ada sekurang-kurangnya 1 simbol khas (contoh: !@#$).",
+    message: "Password must contain at least 1 special character (e.g. !@#$).",
   },
 ];
 
@@ -40,7 +40,7 @@ export default function Register() {
     }
 
     if (form.password !== form.confirmPassword) {
-      setError("Confirmation password tidak sama dengan password.");
+      setError("Confirmation password does not match the password.");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function Register() {
     });
 
     if (res.success) {
-      setSuccess("Akaun berjaya didaftarkan! Sila log masuk.");
+      setSuccess("Account created successfully! Please sign in.");
       setForm({ name: "", email: "", password: "", confirmPassword: "" });
     } else {
       setError(res.message);
@@ -67,7 +67,7 @@ export default function Register() {
         <div className="text-center mb-10">
           <span className="text-4xl">✦</span>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-3 tracking-tight">TaskFlow</h1>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Cipta akaun baru</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Create a new account</p>
         </div>
 
         {error && (
@@ -84,10 +84,10 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-6 space-y-4 transition-colors duration-200">
           <div>
-            <label className="block text-xs text-gray-400 dark:text-gray-500 mb-1.5 font-medium">Nama</label>
+            <label className="block text-xs text-gray-400 dark:text-gray-500 mb-1.5 font-medium">Name</label>
             <input
               type="text"
-              placeholder="Nama anda"
+              placeholder="Your name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 transition"
@@ -118,7 +118,7 @@ export default function Register() {
               required
             />
             <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">
-              Minimum 8 aksara, ada huruf besar, nombor, dan simbol khas.
+              Minimum 8 characters, with an uppercase letter, a number, and a special character.
             </p>
           </div>
 
@@ -126,7 +126,7 @@ export default function Register() {
             <label className="block text-xs text-gray-400 dark:text-gray-500 mb-1.5 font-medium">Confirm Password</label>
             <input
               type="password"
-              placeholder="Ulang semula password"
+              placeholder="Re-enter your password"
               value={form.confirmPassword}
               onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
               className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 transition"
@@ -139,14 +139,14 @@ export default function Register() {
             disabled={loading}
             className="w-full bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition text-sm disabled:opacity-50 mt-2"
           >
-            {loading ? "Loading..." : "Daftar"}
+            {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
         <p className="text-gray-400 dark:text-gray-500 text-xs text-center mt-6">
-          Dah ada akaun?{" "}
+          Already have an account?{" "}
           <button onClick={() => navigate("/login")} className="text-gray-900 dark:text-blue-400 font-medium hover:underline">
-            Log masuk
+            Sign in
           </button>
         </p>
       </div>

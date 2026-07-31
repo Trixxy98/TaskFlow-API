@@ -39,7 +39,7 @@ function TaskCard({ task }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return null;
-    return new Date(dateStr).toLocaleDateString("ms-MY", { day: "numeric", month: "short" });
+    return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   };
 
   const isOverdue = (dateStr) => {
@@ -97,7 +97,7 @@ function Column({ column, tasks }) {
         <div className="flex flex-col gap-2 flex-1 min-h-16">
           {tasks.length === 0 ? (
             <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-              <p className="text-xs text-gray-300 dark:text-gray-600">Drop task di sini</p>
+              <p className="text-xs text-gray-300 dark:text-gray-600">Drop tasks here</p>
             </div>
           ) : (
             tasks.map((task) => (
@@ -117,7 +117,7 @@ export default function Kanban({ tasks, setTasks }) {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  // Guna kanban_status untuk tentukan column — bukan priority!
+  // Use kanban_status to determine the column — not priority!
   const getColumnTasks = (columnId) => {
     return tasks.filter((t) => {
       const ks = t.kanban_status || (t.status === "completed" ? "completed" : "todo");
@@ -143,7 +143,7 @@ export default function Kanban({ tasks, setTasks }) {
     const overId = over.id;
     const activeColumn = findTaskColumn(activeId);
 
-    // Tentukan target column
+    // Determine the target column
     let targetColumn = COLUMNS.find((c) => c.id === overId)?.id || findTaskColumn(overId);
 
     if (!targetColumn || activeColumn === targetColumn) return;
@@ -151,10 +151,10 @@ export default function Kanban({ tasks, setTasks }) {
     const task = tasks.find((t) => t.id === activeId);
     if (!task) return;
 
-    // Update status ikut column — JANGAN tukar priority!
+    // Update status based on the column — do NOT change priority!
     const newStatus = targetColumn === "completed" ? "completed" : "pending";
 
-    // Optimistic update — hanya tukar kanban_status dan status, priority KEKAL sama
+    // Optimistic update — only kanban_status and status change, priority stays the same
     setTasks((prev) =>
       prev.map((t) =>
         t.id === activeId
@@ -163,7 +163,7 @@ export default function Kanban({ tasks, setTasks }) {
       )
     );
 
-    // API — hantar kanban_status dan status je, priority tak dihantar
+    // API — only kanban_status and status are sent, priority is omitted
     await updateTask(activeId, {
       kanban_status: targetColumn,
       status: newStatus,
@@ -177,7 +177,7 @@ export default function Kanban({ tasks, setTasks }) {
     <div className="flex-1 p-4 md:p-8 w-full">
       <div className="mb-6">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Kanban Board</h2>
-        <p className="text-gray-400 text-sm mt-1">Drag & drop tasks untuk tukar status</p>
+        <p className="text-gray-400 text-sm mt-1">Drag &amp; drop tasks to change their status</p>
 
         {tasks.length > 0 && (
           <div className="mt-3 flex items-center gap-4">
@@ -187,7 +187,7 @@ export default function Kanban({ tasks, setTasks }) {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="text-xs text-gray-400 flex-shrink-0">{progress}% selesai</span>
+            <span className="text-xs text-gray-400 flex-shrink-0">{progress}% complete</span>
           </div>
         )}
       </div>
@@ -222,7 +222,7 @@ export default function Kanban({ tasks, setTasks }) {
       {tasks.length === 0 && (
         <div className="text-center py-20">
           <p className="text-4xl mb-3">📋</p>
-          <p className="text-gray-400 text-sm">Belum ada task. Tambah task dalam Dashboard dulu!</p>
+          <p className="text-gray-400 text-sm">No tasks yet. Add one from the Dashboard first!</p>
         </div>
       )}
     </div>

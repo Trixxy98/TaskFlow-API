@@ -50,7 +50,7 @@ const createTask = async (req, res) => {
     const userId = req.user.id;
     const { title, description, due_date, priority, kanban_status, project } = req.body;
     if (!title) {
-      return res.status(400).json({ success: false, message: "Title diperlukan" });
+      return res.status(400).json({ success: false, message: "Title is required" });
     }
 
     const [result] = await db.query(
@@ -58,7 +58,7 @@ const createTask = async (req, res) => {
       [userId, title, description || null, due_date || null, priority || "medium", kanban_status || "todo", project || null]
     );
     const [newTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
-    res.status(201).json({ success: true, message: "Task berjaya dicipta", data: newTask[0] });
+    res.status(201).json({ success: true, message: "Task created successfully", data: newTask[0] });
   } catch (error) {
     return sendServerError(res, error);
   }
@@ -76,7 +76,7 @@ const updateTask = async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: "Task tidak dijumpai" });
+      return res.status(404).json({ success: false, message: "Task not found" });
     }
 
     const current = rows[0];
@@ -97,7 +97,7 @@ const updateTask = async (req, res) => {
 
     const [updated] = await db.query("SELECT * FROM tasks WHERE id = ?", [taskId]);
 
-    res.json({ success: true, message: "Task berjaya dikemaskini", data: updated[0] });
+    res.json({ success: true, message: "Task updated successfully", data: updated[0] });
   } catch (error) {
     return sendServerError(res, error);
   }
@@ -109,11 +109,11 @@ const deleteTask = async (req, res) => {
     const taskId = req.params.id;
     const [existing] = await db.query("SELECT * FROM tasks WHERE id = ? AND user_id = ?", [taskId, userId]);
     if (existing.length === 0) {
-      return res.status(404).json({ success: false, message: "Task tidak dijumpai" });
+      return res.status(404).json({ success: false, message: "Task not found" });
     }
 
     await db.query("DELETE FROM tasks WHERE id = ?", [taskId]);
-    res.json({ success: true, message: "Task berjaya dipadam" });
+    res.json({ success: true, message: "Task deleted successfully" });
   } catch (error) {
     return sendServerError(res, error);
   }

@@ -56,7 +56,7 @@ export default function TableView({ tasks, setTasks }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("ms-MY", { day: "numeric", month: "short", year: "numeric" });
+    return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   };
 
   const isOverdue = (dateStr, status) => {
@@ -148,7 +148,7 @@ export default function TableView({ tasks, setTasks }) {
             ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
             : "bg-amber-50 dark:bg-amber-900/20 text-amber-600"
         }`}>
-          {row.original.status === "completed" ? "Selesai" : "Pending"}
+          {row.original.status === "completed" ? "Completed" : "Pending"}
         </span>
       ),
     }),
@@ -197,7 +197,7 @@ export default function TableView({ tasks, setTasks }) {
 
     // Created at
     columnHelper.accessor("created_at", {
-      header: "Dibuat",
+      header: "Created",
       size: 120,
       cell: ({ row }) => (
         <span className="text-xs text-gray-400">
@@ -242,7 +242,7 @@ export default function TableView({ tasks, setTasks }) {
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Table View</h2>
           <p className="text-gray-400 text-sm mt-1">
-            {tasks.length} tasks • {completedCount} selesai
+            {tasks.length} tasks • {completedCount} completed
           </p>
         </div>
 
@@ -251,7 +251,7 @@ export default function TableView({ tasks, setTasks }) {
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm">⌕</span>
           <input
             type="text"
-            placeholder="Cari task..."
+            placeholder="Search tasks..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm outline-none focus:border-gray-400 shadow-sm w-48"
@@ -296,7 +296,7 @@ export default function TableView({ tasks, setTasks }) {
               {table.getRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className="text-center py-16 text-gray-400 text-sm">
-                    {searchInput ? `Tiada result untuk "${searchInput}"` : "Belum ada task"}
+                    {searchInput ? `No results for "${searchInput}"` : "No tasks yet"}
                   </td>
                 </tr>
               ) : (
@@ -321,10 +321,10 @@ export default function TableView({ tasks, setTasks }) {
         {tasks.length > 0 && (
           <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <p className="text-xs text-gray-400">
-              {table.getFilteredRowModel().rows.length} daripada {tasks.length} tasks
+              {table.getFilteredRowModel().rows.length} of {tasks.length} tasks
             </p>
             <p className="text-xs text-gray-400">
-              Klik pada cell untuk edit • Klik header untuk sort
+              Click a cell to edit • Click a header to sort
             </p>
           </div>
         )}

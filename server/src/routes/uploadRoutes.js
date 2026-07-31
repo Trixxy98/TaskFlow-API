@@ -23,7 +23,7 @@ const fileFilter = (req, file, cb) => {
   if (allowed.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Hanya gambar (JPG, PNG, GIF, WEBP) dan PDF dibenarkan"), false);
+    cb(new Error("Only images (JPG, PNG, GIF, WEBP) and PDF files are allowed"), false);
   }
 };
 
@@ -86,7 +86,7 @@ router.use(auth);
  */
 router.post("/:taskId", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ success: false, message: "Tiada file diupload" });
+    if (!req.file) return res.status(400).json({ success: false, message: "No file was uploaded" });
 
     const { taskId } = req.params;
 
@@ -180,7 +180,7 @@ router.get("/:taskId", async (req, res) => {
 router.delete("/file/:id", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM task_attachments WHERE id = ?", [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ success: false, message: "File tidak dijumpai" });
+    if (rows.length === 0) return res.status(404).json({ success: false, message: "File not found" });
 
     const filePath = path.join(__dirname, "../../uploads", rows[0].filename);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
