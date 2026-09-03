@@ -116,6 +116,7 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const badge = getBadge(item.id);
+                  const locked = user?.plan !== "pro" && (item.id === "notes" || item.id === "calendar");
                   return (
                     <button
                       key={item.id}
@@ -130,6 +131,7 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
                       {!collapsed && (
                         <>
                           <span className="flex-1 text-left">{item.label}</span>
+                          {locked && <span className="text-[10px] text-gray-400">🔒</span>}
                           {badge && (
                             <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-semibold px-2 py-0.5 rounded-full">
                               {badge}
@@ -156,9 +158,20 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{user.name}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                  {user.plan === "pro" ? "Pro" : "Free"} · {user.email}
+                </p>
               </div>
             </div>
+          )}
+
+          {!collapsed && user?.plan !== "pro" && (
+            <button
+              onClick={() => handleNavigate("pricing")}
+              className="w-full bg-gray-900 dark:bg-blue-600 text-white text-xs font-medium py-2 rounded-xl hover:bg-gray-700 dark:hover:bg-blue-500 transition"
+            >
+              Upgrade to Pro
+            </button>
           )}
 
           {/* Theme toggle */}

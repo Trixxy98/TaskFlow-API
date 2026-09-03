@@ -4,6 +4,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const auth = require("../middleware/authMiddleware");
+const requireFeature = require("../middleware/requireFeature");
 const { db } = require("../config/database");
 
 const storage = multer.diskStorage({
@@ -84,7 +85,7 @@ router.use(auth);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/:taskId", upload.single("file"), async (req, res) => {
+router.post("/:taskId", requireFeature("attachments"), upload.single("file"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "No file was uploaded" });
 

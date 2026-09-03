@@ -5,6 +5,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import Attachments from "../components/Attachments";
+import UpgradeGate from "../components/UpgradeGate";
 
 const PRIORITY_CONFIG = {
   high:   { label: "High",   color: "text-red-500",    bg: "bg-red-50 dark:bg-red-900/20",    border: "border-red-200 dark:border-red-800"   },
@@ -22,7 +23,10 @@ export default function Dashboard({ user, tasks, setTasks }) {
   const [editingDueDate, setEditingDueDate] = useState("");
   const [editingPriority, setEditingPriority] = useState("medium");
   const [activeTab, setActiveTab] = useState("tasks");
+  const [planError, setPlanError] = useState("");
   const editRef = useRef(null);
+  const isPro = user?.plan === "pro";
+  const canUseAnalytics = Boolean(user?.features?.analytics ?? isPro);
 
   useEffect(() => {
     if (editingId && editRef.current) editRef.current.focus();
@@ -35,6 +39,9 @@ export default function Dashboard({ user, tasks, setTasks }) {
     if (res.success) {
       setTasks([res.data, ...tasks]);
       setNewTask(""); setNewDueDate(""); setNewPriority("medium");
+      setPlanError("");
+    } else {
+      setPlanError(res.message || "Could not create task.");
     }
   };
 
@@ -186,6 +193,7 @@ export default function Dashboard({ user, tasks, setTasks }) {
             }`}
           >
             {tab.label}
+            {tab.id === "charts" && !canUseAnalytics ? " 🔒" : ""}
           </button>
         ))}
       </div>
@@ -195,6 +203,9 @@ export default function Dashboard({ user, tasks, setTasks }) {
         <>
           {/* Add Task */}
           <form onSubmit={handleCreate} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-5">
+            {planError && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">{planError}</p>
+            )}
             <input
               type="text"
               placeholder="What needs to be done?"
@@ -291,7 +302,7 @@ export default function Dashboard({ user, tasks, setTasks }) {
                               <button onClick={() => handleEditSave(task)} className="bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded-full transition">✓ Save</button>
                               <button onClick={() => setEditingId(null)} className="border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 text-xs px-4 py-1.5 rounded-full transition">Cancel</button>
                           </div>
-                              <Attachments taskId={task.id} />
+                              <Attachments taskId={task.id} locked={!user?.features?.attachments && !isPro} />
                         </div>
                       ) : (
                         <div>
@@ -309,7 +320,7 @@ export default function Dashboard({ user, tasks, setTasks }) {
                             )}
                           </div>
                         </div>
-                        <Attachments taskId={task.id} />
+                        <Attachments taskId={task.id} locked={!user?.features?.attachments && !isPro} />
                       </div>
                       )}
                     </div>
@@ -325,6 +336,7 @@ export default function Dashboard({ user, tasks, setTasks }) {
 
       {/* ── ANALYTICS TAB ── */}
       {activeTab === "charts" && (
+        canUseAnalytics ? (
         <div className="space-y-5">
           {/* Weekly Activity — Area Chart */}
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5">
@@ -427,6 +439,12 @@ export default function Dashboard({ user, tasks, setTasks }) {
             </div>
           </div>
         </div>
+        ) : (
+          <UpgradeGate
+            title="Analytics is a Pro feature"
+            description="See weekly activity, priority breakdown, and completion rate after you upgrade."
+          />
+        )
       )}
 
       {tasks.length > 0 && activeTab === "tasks" && (

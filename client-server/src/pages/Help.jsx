@@ -6,6 +6,8 @@ const FAQS = [
   { q: "How do I set a due date?", a: "When adding a task, pick a date from the date picker. Overdue tasks are highlighted in red." },
   { q: "How do I assign a task to a project?", a: "Go to the Projects page. Tasks without a project appear under the Unassigned Tasks section." },
   { q: "How do I edit a task?", a: "Click the task name to enter edit mode. You can change the title, due date, and priority." },
+  { q: "What is included in the Free plan?", a: "Free includes up to 20 tasks and 3 projects. AI chatbot, file attachments, analytics, calendar, and notes require Pro." },
+  { q: "How do I upgrade to Pro?", a: "Open Plans from the sidebar or Settings. Stripe checkout will be added next; until then, demo unlock may be available in development." },
 ];
 
 export default function Help() {

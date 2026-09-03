@@ -2,6 +2,7 @@ const express = require("express");
 const rateLimit = require("express-rate-limit");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
+const requireFeature = require("../middleware/requireFeature");
 const { chat } = require("../services/aiService");
 
 const aiLimiter = rateLimit({
@@ -34,6 +35,7 @@ router.use(auth);
  *       - List projects (`show me all projects`)
  *
  *       Rate limited to **15 requests per minute** per user.
+ *       Requires the **Pro** plan.
  *     requestBody:
  *       required: true
  *       content:
@@ -95,7 +97,7 @@ router.use(auth);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/chat", aiLimiter, async (req, res, next) => {
+router.post("/chat", requireFeature("ai"), aiLimiter, async (req, res, next) => {
     try {
         const { message, history = [] } = req.body;
         if (!message?.trim()) {
