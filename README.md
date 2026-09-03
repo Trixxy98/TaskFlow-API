@@ -2,8 +2,6 @@
 
 A full-stack task management application with a clean minimal UI, AI-powered chatbot, dark mode, real-time notifications, and production-grade security.
 
-LIVE: https://taskflow-api-production-66fc.up.railway.app
-
 ## Preview
 
 ![TaskFlow AI Chatbot](docs/chatbot-preview.png)
