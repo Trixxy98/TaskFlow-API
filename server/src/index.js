@@ -53,6 +53,7 @@ app.use("/api/feedback", require("./routes/feedbackRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/ai", require("./routes/aiRoutes"));
+app.use("/api/subscription", require("./routes/subscriptionRoutes"));
 app.use("/uploads", (req, res, next) => {
   res.header("Access-Control-Allow-Origin", ALLOWED_ORIGINS[0]);
   next();

@@ -28,7 +28,16 @@ export default function Profile({ user, tasks, onLogout }) {
               </span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{user.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{user.name}</h3>
+                <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
+                  user.plan === "pro"
+                    ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-500"
+                }`}>
+                  {user.plan === "pro" ? "Pro" : "Free"}
+                </span>
+              </div>
               <p className="text-gray-400 dark:text-gray-500 text-sm">{user.email}</p>
             </div>
           </div>

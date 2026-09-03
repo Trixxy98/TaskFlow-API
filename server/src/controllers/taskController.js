@@ -1,7 +1,17 @@
 const { db } = require("../config/database");
+const { assertCanCreateTask } = require("../services/subscriptionService");
 
-const sendServerError = (res, error) =>
-  res.status(500).json({ success: false, message: error.message });
+const sendServerError = (res, error) => {
+  if (error.code === "PLAN_LIMIT" || error.code === "UPGRADE_REQUIRED") {
+    return res.status(error.statusCode || 403).json({
+      success: false,
+      code: error.code,
+      feature: error.feature,
+      message: error.message,
+    });
+  }
+  return res.status(500).json({ success: false, message: error.message });
+};
 
 const VALID_STATUS = ["pending", "completed"];
 
@@ -52,6 +62,8 @@ const createTask = async (req, res) => {
     if (!title) {
       return res.status(400).json({ success: false, message: "Title is required" });
     }
+
+    await assertCanCreateTask(userId);
 
     const [result] = await db.query(
       "INSERT INTO tasks (user_id, title, description, due_date, priority, kanban_status, project) VALUES (?, ?, ?, ?, ?, ?, ?)",

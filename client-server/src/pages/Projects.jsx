@@ -15,6 +15,7 @@ export default function Projects({ tasks, setTasks }) {
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState("#6366f1");
   const [loading, setLoading] = useState(true);
+  const [planError, setPlanError] = useState("");
 
   async function fetchProjects() {
     setLoading(true);
@@ -33,6 +34,9 @@ export default function Projects({ tasks, setTasks }) {
     if (res.success) {
       setProjects([res.data, ...projects]);
       setNewName(""); setNewColor("#6366f1"); setShowForm(false);
+      setPlanError("");
+    } else {
+      setPlanError(res.message || "Could not create project.");
     }
   };
 
@@ -65,6 +69,7 @@ export default function Projects({ tasks, setTasks }) {
       {showForm && (
         <form onSubmit={handleCreate} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5 mb-6">
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">New Project</h3>
+          {planError && <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">{planError}</p>}
           <input
             autoFocus type="text" placeholder="Project name..."
             value={newName} onChange={(e) => setNewName(e.target.value)}

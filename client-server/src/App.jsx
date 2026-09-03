@@ -14,7 +14,7 @@ import Notifications from "./pages/Notifications";
 import Help from "./pages/Help";
 import Settings from "./pages/Settings";
 import Sidebar from "./components/Sidebar";
-import { getTasks, updateTask, deleteTask, logoutUser } from "./services/api";
+import { getTasks, updateTask, deleteTask, logoutUser, getSubscription } from "./services/api";
 import NotionPages from "./pages/NotionPages";
 import Kanban from "./pages/Kanban";
 import useTheme from "./hooks/useTheme";
@@ -23,6 +23,8 @@ import useAuthGuard from "./hooks/useAuthGuard";
 import useIdleTimeout from "./hooks/useIdleTimeout";
 import { SocketProvider } from "./contexts/SocketContext";
 import ChatBot from "./components/ChatBot";
+import Pricing from "./pages/Pricing";
+import { ProFeature } from "./components/UpgradeGate";
 
 function ProtectedRoute({ isAuthenticated }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -66,11 +68,35 @@ export default function App() {
     if (res.success) setTasks(res.data);
   }
 
+  const applyPlan = useCallback((snapshot) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        plan: snapshot.plan,
+        planName: snapshot.planName,
+        limits: snapshot.limits,
+        usage: snapshot.usage,
+        features: snapshot.features,
+        manualUpgrade: snapshot.manualUpgrade,
+      };
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (user) fetchTasks();
   }, [user]);
   /* eslint-enable react-hooks/exhaustive-deps */
+
+  useEffect(() => {
+    if (!user) return;
+    getSubscription().then((res) => {
+      if (res.success) applyPlan(res.data);
+    });
+  }, [user?.id, applyPlan]);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -135,12 +161,37 @@ export default function App() {
           <Route path="/projects" element={<Projects tasks={tasks} setTasks={setTasks} />} />
           <Route path="/kanban" element={<Kanban tasks={tasks} setTasks={setTasks} />} />
           <Route path="/table" element={<TableView tasks={tasks} setTasks={setTasks} />} />
-          <Route path="/notes" element={<NotionPages />} />
-          <Route path="/calendar" element={<CalendarView {...sharedProps} />} />
+          <Route
+            path="/notes"
+            element={
+              <ProFeature
+                user={user}
+                feature="notes"
+                title="Notes is a Pro feature"
+                description="Keep rich-text notes and pages after you upgrade."
+              >
+                <NotionPages />
+              </ProFeature>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <ProFeature
+                user={user}
+                feature="calendar"
+                title="Calendar is a Pro feature"
+                description="See tasks by due date on a monthly calendar after you upgrade."
+              >
+                <CalendarView {...sharedProps} />
+              </ProFeature>
+            }
+          />
           <Route path="/completed" element={<Completed {...sharedProps} />} />
           <Route path="/feedback" element={<Feedback tasks={tasks} />} />
           <Route path="/notifications" element={<Notifications tasks={tasks} onUnreadChange={setUnreadCount} />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/pricing" element={<Pricing user={user} onPlanChange={applyPlan} />} />
           <Route path="/settings" element={<Settings user={user} />} />
           <Route path="/profile" element={<Profile user={user} tasks={tasks} onLogout={handleLogout} />} />
         </Route>

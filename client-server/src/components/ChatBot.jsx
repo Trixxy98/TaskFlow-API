@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { sendChatMessage } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function ChatBot({ onTasksUpdated, user }) {
+  const navigate = useNavigate();
+  const isPro = user?.plan === "pro" || user?.features?.ai;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { role: "model", text: `Hi ${user?.name?.split(" ")[0] || ""}! I'm TaskFlow AI. How can I help you today?` },
@@ -83,6 +86,20 @@ export default function ChatBot({ onTasksUpdated, user }) {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {!isPro ? (
+              <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                <p className="text-3xl mb-3">🔒</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">AI is a Pro feature</p>
+                <p className="text-xs text-gray-400 mb-4">Create and manage tasks in natural language after you upgrade.</p>
+                <button
+                  onClick={() => { setOpen(false); navigate("/pricing"); }}
+                  className="bg-gray-900 dark:bg-blue-600 text-white text-xs px-4 py-2 rounded-xl font-medium"
+                >
+                  Upgrade to Pro
+                </button>
+              </div>
+            ) : (
+              <>
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
@@ -113,9 +130,12 @@ export default function ChatBot({ onTasksUpdated, user }) {
               </div>
             )}
             <div ref={bottomRef} />
+              </>
+            )}
           </div>
 
           {/* Input */}
+          {isPro && (
           <div className="px-3 py-3 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
             <div className="flex gap-2">
               <input
@@ -135,6 +155,7 @@ export default function ChatBot({ onTasksUpdated, user }) {
               </button>
             </div>
           </div>
+          )}
         </div>
       )}
 

@@ -27,6 +27,15 @@ const errorHandler = (err, req, res, next) => {
     return res.status(409).json({ success: false, message: "This record already exists." });
   }
 
+  if (err.code === "UPGRADE_REQUIRED" || err.code === "PLAN_LIMIT") {
+    return res.status(err.statusCode || 403).json({
+      success: false,
+      code: err.code,
+      feature: err.feature,
+      message: err.message,
+    });
+  }
+
   // Log the full error for debugging (server-side only, never exposed to the client)
   console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, err);
 

@@ -287,6 +287,21 @@ export const sendChatMessage = async (message, history = []) => {
   return res.json();
 };
 
+export const getSubscription = async () => {
+  const res = await fetchWithAuth(`${API_URL}/subscription`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+};
+
+export const activatePro = async () => {
+  const res = await fetchWithAuth(`${API_URL}/subscription/activate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+};
+
 export const deleteNotification = async (id) => {
   const res = await fetchWithAuth(`${API_URL}/notifications/${id}`, {
     method: "DELETE",

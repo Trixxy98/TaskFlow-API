@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getAttachments, uploadFile, deleteAttachment } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const formatSize = (bytes) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -7,7 +8,8 @@ const formatSize = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export default function Attachments({ taskId }) {
+export default function Attachments({ taskId, locked = false }) {
+  const navigate = useNavigate();
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -52,7 +54,17 @@ export default function Attachments({ taskId }) {
         Attachments {attachments.length > 0 && `(${attachments.length})`}
       </p>
 
-      {/* Drop zone */}
+      {locked ? (
+        <button
+          type="button"
+          onClick={() => navigate("/pricing")}
+          className="w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center mb-3 hover:border-indigo-400 transition"
+        >
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            🔒 File attachments are available on Pro
+          </p>
+        </button>
+      ) : (
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -84,6 +96,7 @@ export default function Attachments({ taskId }) {
           </p>
         )}
       </div>
+      )}
 
       {/* Attachment list */}
       {attachments.length > 0 && (

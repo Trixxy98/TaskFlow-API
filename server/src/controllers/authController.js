@@ -94,7 +94,12 @@ const login = async (req, res) => {
       message: "Signed in successfully",
       data: {
         token: accessToken,
-        user: { id: user.id, name: user.name, email: user.email },
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          plan: user.plan === "pro" ? "pro" : "free",
+        },
       },
     });
   } catch (error) {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Settings({ user }) {
   const [name, setName] = useState(user.name);
@@ -53,6 +54,34 @@ export default function Settings({ user }) {
             {saved ? "✓ Saved!" : "Save"}
           </button>
         </form>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Plan</h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              You are on the {user?.plan === "pro" ? "Pro" : "Free"} plan
+            </p>
+          </div>
+          {user?.plan !== "pro" && (
+            <Link to="/pricing" className="text-xs font-medium text-indigo-500 hover:underline">
+              Upgrade
+            </Link>
+          )}
+        </div>
+        {user?.limits && (
+          <div className="space-y-2 text-xs text-gray-500">
+            <p>
+              Tasks: {user.usage?.tasks ?? 0}
+              {user.limits.maxTasks !== null ? ` / ${user.limits.maxTasks}` : " · unlimited"}
+            </p>
+            <p>
+              Projects: {user.usage?.projects ?? 0}
+              {user.limits.maxProjects !== null ? ` / ${user.limits.maxProjects}` : " · unlimited"}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Notification Settings */}
