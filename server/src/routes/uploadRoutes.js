@@ -36,6 +36,22 @@ const upload = multer({
 
 router.use(auth);
 
+const uploadsDir = path.join(__dirname, "../../uploads");
+
+const removeUploadedFile = (fileName) => {
+  if (!filename) return;
+  const filePath = path.join(uploadsDir, filename);
+  if (fs.existsSync(filePath)) fs.unlikeSync(filePath);
+};
+
+const getOwnedTask = async (taskId, userId) => {
+  const [[task]] = await db.query(
+    "SELECT id FROM tasks WHERE id = ? AND user_id = ?",
+    [taskId, userId]
+  );
+  return task || null;
+};
+
 /**
  * @swagger
  * tags:
@@ -88,14 +104,16 @@ router.use(auth);
 router.post("/:taskId", requireFeature("attachments"), upload.single("file"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "No file was uploaded" });
-
     const { taskId } = req.params;
-
+    const task = await getOwnedTask(taskId, req.user.id);
+    if (!task) {
+      removeUploadedFile(req.file.filename);
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
     const [result] = await db.query(
       "INSERT INTO task_attachments (task_id, filename, originalname, mimetype, size) VALUES (?, ?, ?, ?, ?)",
       [taskId, req.file.filename, req.file.originalname, req.file.mimetype, req.file.size]
     );
-
     res.status(201).json({
       success: true,
       data: {
@@ -109,6 +127,7 @@ router.post("/:taskId", requireFeature("attachments"), upload.single("file"), as
       },
     });
   } catch (e) {
+    if (req.file) removeUploadedFile(req.file.filename);
     res.status(500).json({ success: false, message: e.message });
   }
 });
@@ -141,6 +160,9 @@ router.post("/:taskId", requireFeature("attachments"), upload.single("file"), as
  */
 router.get("/:taskId", async (req, res) => {
   try {
+    const task = await getOwnedTask(req.params.taskId, req.user.id);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+
     const [attachments] = await db.query(
       "SELECT * FROM task_attachments WHERE task_id = ? ORDER BY created_at DESC",
       [req.params.taskId]
@@ -180,12 +202,15 @@ router.get("/:taskId", async (req, res) => {
  */
 router.delete("/file/:id", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM task_attachments WHERE id = ?", [req.params.id]);
+    const [rows] = await db.query(
+      `SELECT a.* FROM task_attachments a
+       INNER JOIN tasks t ON t.id = a.task_id
+       WHERE a.id = ? AND t.user_id = ?`,
+      [req.params.id, req.user.id]
+    );
     if (rows.length === 0) return res.status(404).json({ success: false, message: "File not found" });
 
-    const filePath = path.join(__dirname, "../../uploads", rows[0].filename);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-
+    removeUploadedFile(rows[0].filename);
     await db.query("DELETE FROM task_attachments WHERE id = ?", [req.params.id]);
     res.json({ success: true });
   } catch (e) {

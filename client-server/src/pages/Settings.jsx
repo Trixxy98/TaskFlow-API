@@ -9,7 +9,6 @@ export default function Settings({ user }) {
     overdue: true,
     dueToday: true,
     dueTomorrow: false,
-    teamActivity: true,
   });
 
   const handleSave = (e) => {
@@ -41,11 +40,12 @@ export default function Settings({ user }) {
           <div>
             <label className="text-xs text-gray-400 dark:text-gray-500 block mb-1">Email</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500"
-            />
+                type="email"
+                value={email}
+                disabled
+                className="w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 rounded-xl px-3 py-2 text-sm outline-none cursor-not-allowed"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">Email cannot be changed yet.</p>
           </div>
           <button
             type="submit"
@@ -92,7 +92,6 @@ export default function Settings({ user }) {
             { key: "overdue", label: "Overdue tasks" },
             { key: "dueToday", label: "Tasks due today" },
             { key: "dueTomorrow", label: "Tasks due tomorrow" },
-            { key: "teamActivity", label: "Team activity" },
           ].map((item) => (
             <div key={item.key} className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-300">{item.label}</span>

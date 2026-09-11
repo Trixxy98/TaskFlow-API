@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const {db} = require('../config/database');
+const { assertCanCreateTask} = require("./subscriptionService");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -107,6 +108,16 @@ const executeTool = async (userId, toolName, toolArgs) => {
 
         case "create_task": {
             const {title, description, priority = "medium", due_date} = toolArgs;
+            try {
+                await assertCanCreateTask(userId);
+            }catch (err) {
+                return {
+                    success: false,
+                    error: err.message,
+                    code: err.code,
+                    feature: err.feature,
+                };
+            }
             const [result] = await db.query(
                 "INSERT INTO tasks (user_id, title, description, priority, due_date) VALUES (?,?,?,?,?)",
                 [userId, title, description || null, priority, due_date || null]
@@ -127,14 +138,24 @@ const executeTool = async (userId, toolName, toolArgs) => {
             const fields = Object.keys(updates).filter((k) => allowed.includes(k));
             if (fields.length === 0) return {success: false, error: "No changes provided"};
 
+            if (updates.status === "completed") {
+                updates.kanban_status = "done";
+                if (!fields.includes("kanban_status")) fields.push("kanban_status");
+            } else if (updates.status === "pending" && existing.kanban_status === "done") {
+                updates.kanban_status = "todo";
+                if (!fields.includes("kanban_status")) fields.push("kanban_status");
+            }
+            
+
             const setClause = fields.map((f) => `${f} = ?`).join(", ");
-            await db.query(`UPDATE tasks SET ${setClause} WHERE id = ?`, [...fields.map((f) => updates[f]),
-        task_id,
-    ]);
+            await db.query(`UPDATE tasks SET ${setClause} WHERE id = ?`, [
+                ...fields.map((f) => updates[f]),
+                task_id,
+            ]);
 
     const [[updated]] = await db.query("SELECT * FROM tasks WHERE id = ?", [task_id]);
     return {success: true, task: updated};
-        }
+}
 
         case "delete_task": {
             const {task_id} = toolArgs;
