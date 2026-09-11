@@ -3,18 +3,30 @@ import Suggestion from "@tiptap/suggestion";
 import { ReactRenderer } from "@tiptap/react";
 import tippy from "tippy.js";
 import SlashCommandsList from "./SlashCommandsList.jsx";
+import {
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  Quote,
+  Code,
+  Minus,
+  Bold,
+  Italic,
+} from "lucide-react";
 
 const COMMANDS = [
-  { title: "Heading 1", description: "Large heading", icon: "H1", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run() },
-  { title: "Heading 2", description: "Medium heading", icon: "H2", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run() },
-  { title: "Heading 3", description: "Small heading", icon: "H3", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run() },
-  { title: "Bullet List", description: "Bulleted list", icon: "•", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBulletList().run() },
-  { title: "Numbered List", description: "Numbered list", icon: "1.", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleOrderedList().run() },
-  { title: "Blockquote", description: "Quoted text", icon: "❝", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBlockquote().run() },
-  { title: "Code Block", description: "Block of code", icon: "</>", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
-  { title: "Divider", description: "Horizontal divider", icon: "—", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
-  { title: "Bold", description: "Bold text", icon: "B", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBold().run() },
-  { title: "Italic", description: "Italic text", icon: "I", command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleItalic().run() },
+  { title: "Heading 1", description: "Large heading", icon: Heading1, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run() },
+  { title: "Heading 2", description: "Medium heading", icon: Heading2, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run() },
+  { title: "Heading 3", description: "Small heading", icon: Heading3, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run() },
+  { title: "Bullet List", description: "Bulleted list", icon: List, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBulletList().run() },
+  { title: "Numbered List", description: "Numbered list", icon: ListOrdered, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleOrderedList().run() },
+  { title: "Blockquote", description: "Quoted text", icon: Quote, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBlockquote().run() },
+  { title: "Code Block", description: "Block of code", icon: Code, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
+  { title: "Divider", description: "Horizontal divider", icon: Minus, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
+  { title: "Bold", description: "Bold text", icon: Bold, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleBold().run() },
+  { title: "Italic", description: "Italic text", icon: Italic, command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleItalic().run() },
 ];
 
 export default Extension.create({

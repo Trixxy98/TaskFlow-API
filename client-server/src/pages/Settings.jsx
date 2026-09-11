@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Check } from "lucide-react";
 
 export default function Settings({ user }) {
   const [name, setName] = useState(user.name);
@@ -51,7 +52,13 @@ export default function Settings({ user }) {
             type="submit"
             className="bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-5 py-2 rounded-full transition font-medium"
           >
-            {saved ? "✓ Saved!" : "Save"}
+            {saved ? (
+              <span className="inline-flex items-center gap-1">
+                <Check className="w-3.5 h-3.5" /> Saved
+              </span>
+            ) : (
+              "Save"
+            )}
           </button>
         </form>
       </div>
@@ -81,7 +88,7 @@ export default function Settings({ user }) {
               {user.limits.maxProjects !== null ? ` / ${user.limits.maxProjects}` : " · unlimited"}
             </p>
           </div>
-        )}
+        )} 
       </div>
 
       {/* Notification Settings */}

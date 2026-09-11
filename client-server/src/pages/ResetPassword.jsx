@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { resetPassword } from "../services/api";
+import BrandMark from "../components/BrandMark";
+import { Check, Circle } from "lucide-react";
 
 const PASSWORD_RULES = [
   { test: (p) => p.length >= 8, message: "At least 8 characters" },
@@ -56,7 +58,9 @@ export default function ResetPassword() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4 transition-colors duration-200">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <span className="text-4xl">✦</span>
+          <div className="flex justify-center">
+            <BrandMark size="lg" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-3 tracking-tight">TaskFlow</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Set a new password</p>
         </div>
@@ -93,8 +97,10 @@ export default function ResetPassword() {
                 <div className="mt-2 space-y-1">
                   {PASSWORD_RULES.map((rule) => (
                     <div key={rule.message} className="flex items-center gap-1.5">
-                      <span className={`text-[10px] font-semibold ${rule.test(form.password) ? "text-green-500" : "text-gray-300 dark:text-gray-600"}`}>
-                        {rule.test(form.password) ? "✓" : "○"}
+                      <span className={`flex items-center ${rule.test(form.password) ? "text-green-500" : "text-gray-300 dark:text-gray-600"}`}>
+                      {rule.test(form.password)
+                        ? <Check className="w-3 h-3 text-green-500" strokeWidth={2.5} />
+                        : <Circle className="w-3 h-3 text-gray-300 dark:text-gray-600" strokeWidth={2} />}
                       </span>
                       <span className={`text-[11px] ${rule.test(form.password) ? "text-green-500" : "text-gray-400 dark:text-gray-500"}`}>
                         {rule.message}

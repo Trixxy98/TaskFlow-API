@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 
 export function hasProFeature(user, feature) {
   return user?.plan === "pro" || Boolean(user?.features?.[feature]);
@@ -20,7 +21,7 @@ export default function UpgradeGate({ title, description }) {
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8 text-center">
-      <p className="text-3xl mb-3">✦</p>
+      <Sparkles className="w-7 h-7 text-gray-900 dark:text-white mx-auto mb-3" strokeWidth={1.75} />
       <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">{title}</h3>
       <p className="text-sm text-gray-400 dark:text-gray-500 mb-5 max-w-sm mx-auto">{description}</p>
       <button

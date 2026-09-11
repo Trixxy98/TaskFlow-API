@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 const FAQS = [
   { q: "How do I add a new task?", a: "Go to the Tasks page, type in the 'What needs to be done?' box and click + Add." },
@@ -28,7 +29,7 @@ export default function Help() {
               className="w-full flex items-center justify-between px-5 py-4 text-left"
             >
               <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{faq.q}</span>
-              <span className="text-gray-400 dark:text-gray-500 text-sm ml-3 flex-shrink-0">{openIndex === i ? "↑" : "↓"}</span>
+              {openIndex === i ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0 ml-3" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0 ml-3" />}
             </button>
             {openIndex === i && (
               <div className="px-5 pb-4">

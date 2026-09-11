@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-table";
 import { updateTask, deleteTask } from "../services/api";
 import useDebounce from "../hooks/useDebounce";
+import { Check, TriangleAlert, X, Search } from "lucide-react";
 
 const PRIORITY_CONFIG = {
   high:   { label: "High",   color: "text-red-500",     bg: "bg-red-50 dark:bg-red-900/20"     },
@@ -79,7 +80,7 @@ export default function TableView({ tasks, setTasks }) {
               : "border-gray-300 dark:border-gray-600 hover:border-gray-900"
           }`}
         >
-          {row.original.status === "completed" && <span className="text-white text-xs">✓</span>}
+          {row.original.status === "completed" && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
         </button>
       ),
     }),
@@ -129,9 +130,9 @@ export default function TableView({ tasks, setTasks }) {
             onChange={(e) => handlePriority(row.original, e.target.value)}
             className={`text-xs px-2 py-1 rounded-lg border-0 outline-none cursor-pointer font-medium ${p.bg} ${p.color}`}
           >
-            <option value="high">🔴 High</option>
-            <option value="medium">🟡 Medium</option>
-            <option value="low">🟢 Low</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
           </select>
         );
       },
@@ -177,8 +178,12 @@ export default function TableView({ tasks, setTasks }) {
                 : "text-gray-500 dark:text-gray-400"
             }`}
           >
-            {formatDate(row.original.due_date)}
-            {isOverdue(row.original.due_date, row.original.status) && " ⚠️"}
+            <span className="inline-flex items-center gap-1">
+              {formatDate(row.original.due_date)}
+              {isOverdue(row.original.due_date, row.original.status) && (
+                <TriangleAlert className="w-3 h-3" />
+              )}
+            </span>
           </span>
         );
       },
@@ -216,7 +221,7 @@ export default function TableView({ tasks, setTasks }) {
           onClick={() => handleDelete(row.original.id)}
           className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition text-sm opacity-0 group-hover/row:opacity-100"
         >
-          ✕
+          <X className="w-4 h-4" />
         </button>
       ),
     }),
@@ -248,7 +253,7 @@ export default function TableView({ tasks, setTasks }) {
 
         {/* Search */}
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm">⌕</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
           <input
             type="text"
             placeholder="Search tasks..."

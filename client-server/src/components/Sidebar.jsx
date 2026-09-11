@@ -1,33 +1,54 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Folder,
+  Columns3,
+  Table2,
+  StickyNote,
+  CalendarDays,
+  CheckCircle2,
+  ListTodo,
+  MessageSquare,
+  Bell,
+  CircleHelp,
+  Settings,
+  Lock,
+  Menu,
+  X,
+  ChevronsLeft,
+  ChevronsRight,
+  LogOut,
+} from "lucide-react";
 import { hasProFeature } from "./UpgradeGate";
+import BrandMark from "./BrandMark";
 
 const NAV_SECTIONS = [
   {
     label: "OVERVIEW",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: "⊞" },
-      { id: "projects", label: "Projects", icon: "⊟", badge: null },
-      { id: "kanban", label: "Kanban", icon: "⊞" },
-      { id: "table", label: "Table View", icon: "⊟" },
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { id: "projects", label: "Projects", icon: Folder, badge: null },
+      { id: "kanban", label: "Kanban", icon: Columns3 },
+      { id: "table", label: "Table View", icon: Table2 },
     ],
   },
   {
     label: "MY PAGES",
     items: [
-      { id: "notes", label: "Notes", icon: "📝" },
-      { id: "calendar", label: "Calendar", icon: "📅" },
-      { id: "completed", label: "Completion", icon: "✓" },
-      { id: "tasks", label: "Tasks", icon: "☰" },
-      { id: "feedback", label: "Feedback", icon: "💬", badge: null },
+      { id: "notes", label: "Notes", icon: StickyNote },
+      { id: "calendar", label: "Calendar", icon: CalendarDays },
+      { id: "completed", label: "Completion", icon: CheckCircle2 },
+      { id: "tasks", label: "Tasks", icon: ListTodo },
+      { id: "feedback", label: "Feedback", icon: MessageSquare, badge: null },
     ],
   },
   {
     label: "SUPPORT",
     items: [
-      { id: "notifications", label: "Notifications", icon: "🔔" },
-      { id: "help", label: "Help Centre", icon: "❓" },
-      { id: "settings", label: "Settings", icon: "⚙️" },
+      { id: "notifications", label: "Notifications", icon: Bell },
+      { id: "help", label: "Help Centre", icon: CircleHelp },
+      { id: "settings", label: "Settings", icon: Settings },
     ],
   },
 ];
@@ -57,55 +78,51 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
 
   return (
     <>
-      {/* Mobile top bar */}
       <div className="md:hidden bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-sm dark:shadow-none">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs font-bold"></span>
-          </div>
+          <BrandMark />
           <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100">TaskFlow</h1>
         </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="text-gray-500 dark:text-gray-400 text-xl">
-          {mobileOpen ? "✕" : "☰"}
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="text-gray-500 dark:text-gray-400 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+        >
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 bg-black/40 z-30" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside className={`
         fixed md:sticky top-0 h-screen z-40 bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-gray-800
         flex flex-col transition-all duration-300 overflow-y-auto
         ${collapsed ? "md:w-16" : "md:w-60"}
         ${mobileOpen ? "left-0 w-64" : "-left-64 md:left-0"}
       `}>
-        {/* Logo */}
         <div className="flex items-center justify-between px-4 py-5 border-b border-gray-50 dark:border-gray-800 flex-shrink-0">
           {!collapsed && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-white dark:bg-gray-900 rounded-xl flex items-center justify-center border border-gray-100 dark:border-gray-700">
-                <span className="text-black text-xl font-bold">✦</span>
-              </div>
+              <BrandMark />
               <span className="text-base font-semibold text-gray-900 dark:text-white">TaskFlow</span>
             </div>
           )}
           {collapsed && (
-            <div className="w-8 h-8 bg-white dark:bg-gray-900 rounded-xl flex items-center justify-center mx-auto border border-gray-100 dark:border-gray-700">
-              <span className="text-black text-xl font-bold">✦</span>
+            <div className="mx-auto">
+              <BrandMark />
             </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex w-6 h-6 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 transition text-xs ml-1"
+            className="hidden md:flex w-6 h-6 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 transition ml-1"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? "→" : "←"}
+            {collapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
           </button>
         </div>
 
-        {/* Nav Sections */}
         <nav className="flex-1 px-3 py-4 space-y-5">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
@@ -118,6 +135,7 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
                 {section.items.map((item) => {
                   const badge = getBadge(item.id);
                   const locked = (item.id === "notes" || item.id === "calendar") && !hasProFeature(user, item.id);
+                  const Icon = item.icon;
                   return (
                     <button
                       key={item.id}
@@ -128,11 +146,11 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
                           : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-800 dark:hover:text-white"
                       }`}
                     >
-                      <span className="text-base flex-shrink-0">{item.icon}</span>
+                      <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
                       {!collapsed && (
                         <>
                           <span className="flex-1 text-left">{item.label}</span>
-                          {locked && <span className="text-[10px] text-gray-400">🔒</span>}
+                          {locked && <Lock className="w-3 h-3 text-gray-400" strokeWidth={2} />}
                           {badge && (
                             <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-semibold px-2 py-0.5 rounded-full">
                               {badge}
@@ -149,9 +167,7 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
 
         </nav>
 
-        {/* Bottom — Theme + Logout */}
         <div className="px-3 py-4 border-t border-gray-50 dark:border-gray-800 flex-shrink-0 space-y-3">
-          {/* User info */}
           {!collapsed && (
             <div className="flex items-center gap-3 px-2">
               <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-blue-600 flex items-center justify-center flex-shrink-0">
@@ -175,7 +191,6 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
             </button>
           )}
 
-          {/* Theme toggle */}
           {!collapsed && (
             <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1">
               {["Dark", "Light", "System"].map((t) => (
@@ -194,12 +209,11 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
             </div>
           )}
 
-          {/* Sign out */}
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-400 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-300 transition"
           >
-            <span className="flex-shrink-0">⎋</span>
+            <LogOut className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
             {!collapsed && <span>Sign Out</span>}
           </button>
         </div>

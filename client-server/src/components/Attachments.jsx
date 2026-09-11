@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getAttachments, uploadFile, deleteAttachment, fetchAttachmentBlob } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { Image, FileText, Lock, Paperclip, X } from "lucide-react";
 
 const formatSize = (bytes) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -43,7 +44,9 @@ function AttachmentPreview({ att }) {
             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
           />
         ) : (
-          <span className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm">🖼️</span>
+          <span className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <Image className="w-4 h-4 text-gray-400" />
+          </span>
         )}
       </a>
     );
@@ -57,7 +60,7 @@ function AttachmentPreview({ att }) {
       onClick={(e) => { if (!src) e.preventDefault(); }}
       className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0"
     >
-      <span className="text-red-500 text-lg">📄</span>
+      <FileText className="w-5 h-5 text-red-500" />
     </a>
   );
 }
@@ -113,7 +116,7 @@ export default function Attachments({ taskId, locked = false }) {
           className="w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center mb-3 hover:border-indigo-400 transition"
         >
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            🔒 File attachments are available on Pro
+            <Lock className="w-3.5 h-3.5 inline -mt-0.5" /> File attachments are available on Pro
           </p>
         </button>
       ) : (
@@ -142,7 +145,9 @@ export default function Attachments({ taskId, locked = false }) {
           </div>
         ) : (
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            📎 Drop a file here or <span className="text-indigo-500">browse</span>
+            <span className="inline-flex items-center justify-center gap-1">
+              <Paperclip className="w-3.5 h-3.5" /> Drop a file here or <span className="text-indigo-500">browse</span>
+            </span>
             <br />
             <span className="text-gray-300 dark:text-gray-600">JPG, PNG, GIF, WEBP, PDF • Max 5MB</span>
           </p>
@@ -168,7 +173,7 @@ export default function Attachments({ taskId, locked = false }) {
                 onClick={() => handleDelete(att.id)}
                 className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm flex-shrink-0"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
           ))}

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { getNotifications, markNotificationRead, markAllRead, deleteNotification } from "../services/api";
+import { Bell, Users, CircleAlert, Clock, CalendarClock, X } from "lucide-react";
 
 const NOTIF_CONFIG = {
-  team_invite: { icon: "👥", color: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800" },
-  task_overdue: { icon: "🔴", color: "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800" },
-  task_due_today: { icon: "🟡", color: "bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800" },
-  task_due_tomorrow: { icon: "🔵", color: "bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800" },
-  default: { icon: "🔔", color: "bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700" },
+  team_invite: { icon: Users, color: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800", iconColor: "text-indigo-500" },
+  task_overdue: { icon: CircleAlert, color: "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800", iconColor: "text-red-500" },
+  task_due_today: { icon: Clock, color: "bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800", iconColor: "text-amber-500" },
+  task_due_tomorrow: { icon: CalendarClock, color: "bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800", iconColor: "text-blue-500" },
+  default: { icon: Bell, color: "bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700", iconColor: "text-gray-400" },
 };
 
 export default function Notifications({ tasks, onUnreadChange }) {
@@ -82,7 +83,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Notifications</h2>
           <p className="text-gray-400 text-sm mt-1">
-            {unread.length > 0 ? `${unread.length} unread` : "All caught up ✓"}
+            {unread.length > 0 ? `${unread.length} unread` : "All caught up"}
           </p>
         </div>
         {unread.length > 0 && (
@@ -119,7 +120,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-4xl mb-3">🔔</p>
+          <Bell className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
           <p className="text-gray-400 text-sm">
             {activeTab === "unread" ? "No unread notifications" : "No notifications"}
           </p>
@@ -128,6 +129,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
         <div className="space-y-2">
           {filtered.map((notif) => {
             const config = NOTIF_CONFIG[notif.type] || NOTIF_CONFIG.default;
+            const Icon = config.icon;
             return (
               <div
                 key={notif.id}
@@ -136,7 +138,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
                   !notif.is_read ? "opacity-100" : "opacity-60"
                 }`}
               >
-                <span className="text-xl flex-shrink-0 mt-0.5">{config.icon}</span>
+                <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${config.iconColor}`} strokeWidth={1.75} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <p className={`text-sm font-semibold text-gray-800 dark:text-gray-100 ${!notif.is_read ? "" : "font-normal"}`}>
@@ -151,7 +153,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
                           onClick={(e) => { e.stopPropagation(); handleDelete(notif.id); }}
                           className="text-gray-300 dark:text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-xs"
                         >
-                          ✕
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>

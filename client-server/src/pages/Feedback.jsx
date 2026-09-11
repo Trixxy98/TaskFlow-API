@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getFeedback, createFeedback, deleteFeedback } from "../services/api";
+import { MessageSquare, X, Bookmark } from "lucide-react";
 
 export default function Feedback({ tasks }) {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -69,7 +70,7 @@ export default function Feedback({ tasks }) {
         <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-blue-500 rounded-full animate-spin" /></div>
       ) : feedbacks.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-4xl mb-3">💬</p>
+          <MessageSquare className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
           <p className="text-gray-400 dark:text-gray-500 text-sm">No feedback yet</p>
         </div>
       ) : (
@@ -86,9 +87,14 @@ export default function Feedback({ tasks }) {
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{fb.author_name}</span>
                       <span className="text-xs text-gray-400 dark:text-gray-500">{formatTime(fb.created_at)}</span>
                     </div>
-                    <button onClick={() => handleDelete(fb.id)} className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm">✕</button>
+                    <button onClick={() => handleDelete(fb.id)} className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100 p-0.5" aria-label="Delete feedback">
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <p className="text-xs text-indigo-500 mb-1.5">📌 {fb.task_title}</p>
+                  <p className="inline-flex items-center gap-1 text-xs text-indigo-500 mb-1.5">
+                    <Bookmark className="w-3 h-3" />
+                    {fb.task_title}
+                  </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{fb.message}</p>
                 </div>
               </div>
