@@ -14,7 +14,8 @@ A full-stack task management application with a clean minimal UI, AI-powered cha
 
 ## Preview
 
-![TaskFlow AI Chatbot](docs/chatbot-preview.png)
+<img width="1703" height="972" alt="image" src="https://github.com/user-attachments/assets/fcb7d950-e0b3-44a0-ab13-3a8bf192fdf5" />
+
 
 *AI chatbot — ask in Malay or English to manage your tasks hands-free*
 
