@@ -83,10 +83,9 @@ Leftover: `server/src/validators/team.validators.js` is unused. Ignore it for ne
 5. Morgan, `express.json()`, cookie-parser.
 6. `apiLimiter` on `/api`.
 7. Mount routers (auth, tasks, projects, feedback, upload, notifications, AI, subscription).
-8. Static `/uploads`.
-9. Swagger UI at `/api/docs`.
-10. `errorHandler` last.
-11. `testConnection()` then `listen(PORT)`.
+8. Swagger UI at `/api/docs`.
+9. `errorHandler` last.
+10. `testConnection()` then `listen(PORT)`.
 
 Production start: migrate, then this file.
 
@@ -185,14 +184,11 @@ On login, `getSubscription()` hydrates `plan`, `features`, `limits`, `usage`, `m
 | `/api/tasks` | Bearer | Create: plan limit | CRUD + pagination |
 | `/api/projects` | Bearer | Create: plan limit | List/create/delete |
 | `/api/feedback` | Bearer | — | List/create/delete |
-| `/api/upload` | Bearer | POST: `attachments` | Multer + attachment rows |
+| `/api/upload` | Bearer | POST: `attachments`; GET file: owner check | Multer + attachment rows + authenticated download |
 | `/api/notifications` | Bearer | — | List, read, delete |
 | `/api/ai` | Bearer | `ai` + 15/min | Gemini function calling |
 | `/api/subscription` | Bearer | activate: env flag | Snapshot + demo Pro |
 | `/api/docs` | No | — | Swagger UI |
-| `/uploads` | No* | — | Static files |
-
-\*Uploads are not JWT-protected at the static layer; filenames are unguessable-ish (timestamp + random). Do not treat that as authorization.
 
 ## 8. AI architecture
 
@@ -205,7 +201,7 @@ POST /api/ai/chat { message, history }
   → { reply, actions }
 ```
 
-Tools run **as the authenticated user**. Update/delete check `id AND user_id`. Create currently bypasses Free task caps (see RULES.md).
+Tools run **as the authenticated user**. Update/delete check `id AND user_id`. Create goes through Joi validators, plan limits, and a per-user row lock.
 
 System instruction: TaskFlow-only scope; always English.
 

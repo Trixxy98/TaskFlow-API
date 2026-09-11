@@ -1,6 +1,10 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const {db} = require('../config/database');
-const { assertCanCreateTask} = require("./subscriptionService");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { db } = require("../config/database");
+const { assertCanCreateTask, withUserLock } = require("./subscriptionService");
+const taskValidators = require("../validators/task.validators");
+
+const MAX_TOOL_ROUNDS = 8;
+const MAX_TASK_LIMIT = 50;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -88,10 +92,27 @@ const TOOLS = [
     },
 ]
 
+const toSqlDate = (value) => {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString().slice(0, 10);
+};
+
+const validatePayload = (schema, payload) => {
+    const { error, value } = schema.validate(payload, { abortEarly: true, stripUnknown: true });
+    if (error) return { ok: false, error: error.details[0].message };
+    return { ok: true, value };
+};
+
 const executeTool = async (userId, toolName, toolArgs) => {
     switch (toolName) {
         case "get_tasks": {
-            const { status, limit = 10} = toolArgs;
+            const { status, limit = 10 } = toolArgs;
+            const parsed = Number(limit);
+            const safeLimit = Number.isFinite(parsed)
+                ? Math.min(MAX_TASK_LIMIT, Math.max(1, Math.trunc(parsed)))
+                : 10;
             let where = "WHERE user_id = ?";
             const params = [userId];
             if (status === "pending" || status === "completed") {
@@ -101,16 +122,32 @@ const executeTool = async (userId, toolName, toolArgs) => {
             const [tasks] = await db.query(
                 `SELECT id, title, description, status, priority, due_date, project, created_at
                 FROM tasks ${where} ORDER BY created_at DESC LIMIT ?`,
-                [...params, limit]
+                [...params, safeLimit]
             );
-            return {tasks, count: tasks.length};
+            return { tasks, count: tasks.length };
         }
 
         case "create_task": {
-            const {title, description, priority = "medium", due_date} = toolArgs;
+            const validated = validatePayload(taskValidators.createTask, {
+                title: toolArgs.title,
+                description: toolArgs.description || null,
+                priority: toolArgs.priority,
+                due_date: toolArgs.due_date || null,
+            });
+            if (!validated.ok) return { success: false, error: validated.error };
+
+            const { title, description, priority, due_date } = validated.value;
             try {
-                await assertCanCreateTask(userId);
-            }catch (err) {
+                return await withUserLock(userId, async (conn) => {
+                    await assertCanCreateTask(userId, conn);
+                    const [result] = await conn.query(
+                        "INSERT INTO tasks (user_id, title, description, priority, due_date) VALUES (?,?,?,?,?)",
+                        [userId, title, description || null, priority || "medium", toSqlDate(due_date)]
+                    );
+                    const [[task]] = await conn.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
+                    return { success: true, task };
+                });
+            } catch (err) {
                 return {
                     success: false,
                     error: err.message,
@@ -118,44 +155,47 @@ const executeTool = async (userId, toolName, toolArgs) => {
                     feature: err.feature,
                 };
             }
-            const [result] = await db.query(
-                "INSERT INTO tasks (user_id, title, description, priority, due_date) VALUES (?,?,?,?,?)",
-                [userId, title, description || null, priority, due_date || null]
-            );
-            const [[task]] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
-            return { success: true, task};
         }
 
         case "update_task": {
-            const {task_id, ...updates} = toolArgs;
+            const { task_id, ...updates } = toolArgs;
+            if (!Number.isInteger(Number(task_id)) || Number(task_id) <= 0) {
+                return { success: false, error: "task_id must be a valid number" };
+            }
+
+            const validated = validatePayload(taskValidators.updateTask, updates);
+            if (!validated.ok) return { success: false, error: validated.error };
+
             const [[existing]] = await db.query(
                 "SELECT * FROM tasks WHERE id = ? AND user_id = ?",
                 [task_id, userId]
             );
-            if (!existing) return {success: false, error: "Task not found"};
+            if (!existing) return { success: false, error: "Task not found" };
 
             const allowed = ["title", "status", "priority", "due_date", "description"];
-            const fields = Object.keys(updates).filter((k) => allowed.includes(k));
-            if (fields.length === 0) return {success: false, error: "No changes provided"};
+            const next = { ...validated.value };
+            if (next.due_date !== undefined) next.due_date = toSqlDate(next.due_date);
 
-            if (updates.status === "completed") {
-                updates.kanban_status = "done";
+            const fields = Object.keys(next).filter((k) => allowed.includes(k));
+            if (fields.length === 0) return { success: false, error: "No changes provided" };
+
+            if (next.status === "completed") {
+                next.kanban_status = "done";
                 if (!fields.includes("kanban_status")) fields.push("kanban_status");
-            } else if (updates.status === "pending" && existing.kanban_status === "done") {
-                updates.kanban_status = "todo";
+            } else if (next.status === "pending" && existing.kanban_status === "done") {
+                next.kanban_status = "todo";
                 if (!fields.includes("kanban_status")) fields.push("kanban_status");
             }
-            
 
             const setClause = fields.map((f) => `${f} = ?`).join(", ");
             await db.query(`UPDATE tasks SET ${setClause} WHERE id = ?`, [
-                ...fields.map((f) => updates[f]),
+                ...fields.map((f) => next[f]),
                 task_id,
             ]);
 
-    const [[updated]] = await db.query("SELECT * FROM tasks WHERE id = ?", [task_id]);
-    return {success: true, task: updated};
-}
+            const [[updated]] = await db.query("SELECT * FROM tasks WHERE id = ?", [task_id]);
+            return { success: true, task: updated };
+        }
 
         case "delete_task": {
             const {task_id} = toolArgs;
@@ -199,16 +239,25 @@ Example refusal: "Sorry, I can only help with task and project management in Tas
     let result = await chatSession.sendMessage(userMessage);
     let response = result.response;
     const executedActions = [];
+    let rounds = 0;
 
     while (response.functionCalls()?.length > 0) {
+        rounds += 1;
+        if (rounds > MAX_TOOL_ROUNDS) {
+            return {
+                reply: "I had to stop after too many steps. Please try a simpler request.",
+                actions: executedActions,
+            };
+        }
+
         const calls = response.functionCalls();
         const functionResults = [];
 
         for (const call of calls) {
             const toolResult = await executeTool(userId, call.name, call.args);
-            executedActions.push({tool: call.name, args: call.args, result: toolResult});
+            executedActions.push({ tool: call.name, args: call.args, result: toolResult });
             functionResults.push({
-                functionResponse: {name: call.name, response: toolResult},
+                functionResponse: { name: call.name, response: toolResult },
             });
         }
 

@@ -1,6 +1,5 @@
 const http = require("http");
 const express = require("express");
-const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -54,17 +53,13 @@ app.use("/api/upload", require("./routes/uploadRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/ai", require("./routes/aiRoutes"));
 app.use("/api/subscription", require("./routes/subscriptionRoutes"));
-app.use("/uploads", (req, res, next) => {
-  res.header("Access-Control-Allow-Origin", ALLOWED_ORIGINS[0]);
-  next();
-}, express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: "TaskFlow API Docs",
 }));
 
 app.get("/", (req, res) => {
-  res.json({ message: "🚀 TaskFlow API is running!", docs: "http://localhost:3001/api/docs" });
+  res.json({ message: "🚀 TaskFlow API is running!", docs: "/api/docs" });
 });
 
 app.use(errorHandler);

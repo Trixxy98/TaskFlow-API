@@ -250,6 +250,12 @@ export const deleteAttachment = async (id) => {
   return res.json();
 };
 
+export const fetchAttachmentBlob = async (id) => {
+  const res = await fetchWithAuth(`${API_URL}/upload/file/${id}`);
+  if (!res.ok) return null;
+  return res.blob();
+};
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 export const getNotifications = async (params = {}) => {

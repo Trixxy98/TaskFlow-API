@@ -1,5 +1,5 @@
 const { db } = require("../config/database");
-const { assertCanCreateTask } = require("../services/subscriptionService");
+const { assertCanCreateTask, withUserLock } = require("../services/subscriptionService");
 
 const sendServerError = (res, error) => {
   if (error.code === "PLAN_LIMIT" || error.code === "UPGRADE_REQUIRED") {
@@ -79,17 +79,21 @@ const createTask = async (req, res) => {
       return res.status(400).json({ success: false, message: "Title is required" });
     }
 
-    await assertCanCreateTask(userId);
+    const newTask = await withUserLock(userId, async (conn) => {
+      await assertCanCreateTask(userId, conn);
 
-    const initialKanban = kanban_status || "todo";
-    const initialStatus = initialKanban === "done" ? "completed" : "pending";
+      const initialKanban = kanban_status || "todo";
+      const initialStatus = initialKanban === "done" ? "completed" : "pending";
 
-    const [result] = await db.query(
-      "INSERT INTO tasks (user_id, title, description, due_date, priority, kanban_status, project) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [userId, title, description || null, initialStatus, due_date || null, priority || "medium", initialKanban, project || null]
-    );
-    const [newTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
-    res.status(201).json({ success: true, message: "Task created successfully", data: newTask[0] });
+      const [result] = await conn.query(
+        "INSERT INTO tasks (user_id, title, description, status, due_date, priority, kanban_status, project) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [userId, title, description || null, initialStatus, due_date || null, priority || "medium", initialKanban, project || null]
+      );
+      const [rows] = await conn.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
+      return rows[0];
+    });
+
+    res.status(201).json({ success: true, message: "Task created successfully", data: newTask });
   } catch (error) {
     return sendServerError(res, error);
   }

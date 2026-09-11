@@ -1,5 +1,5 @@
 const { db } = require("../config/database");
-const { assertCanCreateProject } = require("./subscriptionService");
+const { assertCanCreateProject, withUserLock } = require("./subscriptionService");
 
 const getProjectsByUser = async (userId) => {
   const [projects] = await db.query(
@@ -10,13 +10,15 @@ const getProjectsByUser = async (userId) => {
 };
 
 const createProject = async (userId, name, color) => {
-  await assertCanCreateProject(userId);
-  const [result] = await db.query(
-    "INSERT INTO projects (user_id, name, color) VALUES (?, ?, ?)",
-    [userId, name, color]
-  );
-  const [project] = await db.query("SELECT * FROM projects WHERE id = ?", [result.insertId]);
-  return project[0];
+  return withUserLock(userId, async (conn) => {
+    await assertCanCreateProject(userId, conn);
+    const [result] = await conn.query(
+      "INSERT INTO projects (user_id, name, color) VALUES (?, ?, ?)",
+      [userId, name, color]
+    );
+    const [project] = await conn.query("SELECT * FROM projects WHERE id = ?", [result.insertId]);
+    return project[0];
+  });
 };
 
 const deleteProject = async (projectId, userId) => {

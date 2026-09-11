@@ -39,8 +39,7 @@ Source of truth: `server/src/config/plans.js`.
   - If unset: allowed when `NODE_ENV !== "production"`.
   - Denied response: `403`, `code: "STRIPE_PENDING"`.
 - Frontend may treat `user.plan === "pro"` **or** `user.features[feature]` as unlocked (`hasProFeature`).
-
-**Known gap:** AI tool `create_task` inserts SQL directly and does not call `assertCanCreateTask`. Do not rely on AI as a limit enforcer until that is fixed.
+- Create-task and create-project check + insert run in one transaction with `SELECT ... FOR UPDATE` on the user row.
 
 ## 3. Auth and session rules
 
@@ -92,7 +91,7 @@ Joi on POST/PUT/PATCH. Reject unknown misuse via schema; return 400 with English
 - Max size **5MB** → 413 `LIMIT_FILE_SIZE`.
 - Wrong type → 415 with the filter message.
 - Disk path: `server/uploads/`; filename `{timestamp}-{random}{ext}`.
-- Static files served at `/uploads` with CORS header for the first allowed origin.
+- Files are served only via authenticated `GET /api/upload/file/:id` after verifying the parent task belongs to `req.user.id`.
 
 ## 7. Rate limits
 

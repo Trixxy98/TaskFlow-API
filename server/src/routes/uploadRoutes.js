@@ -39,9 +39,9 @@ router.use(auth);
 const uploadsDir = path.join(__dirname, "../../uploads");
 
 const removeUploadedFile = (fileName) => {
-  if (!filename) return;
-  const filePath = path.join(uploadsDir, filename);
-  if (fs.existsSync(filePath)) fs.unlikeSync(filePath);
+  if (!fileName) return;
+  const filePath = path.join(uploadsDir, path.basename(fileName));
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 };
 
 const getOwnedTask = async (taskId, userId) => {
@@ -123,11 +123,54 @@ router.post("/:taskId", requireFeature("attachments"), upload.single("file"), as
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size,
-        url: `/uploads/${req.file.filename}`,
+        url: `/api/upload/file/${result.insertId}`,
       },
     });
   } catch (e) {
     if (req.file) removeUploadedFile(req.file.filename);
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/upload/file/{id}:
+ *   get:
+ *     summary: Download an attachment (owner only)
+ *     tags: [Uploads]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: File stream
+ *       404:
+ *         description: File not found
+ */
+router.get("/file/:id", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT a.* FROM task_attachments a
+       INNER JOIN tasks t ON t.id = a.task_id
+       WHERE a.id = ? AND t.user_id = ?`,
+      [req.params.id, req.user.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ success: false, message: "File not found" });
+
+    const filePath = path.join(uploadsDir, path.basename(rows[0].filename));
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: "File not found" });
+    }
+
+    res.setHeader("Content-Type", rows[0].mimetype);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(rows[0].originalname)}"`
+    );
+    return res.sendFile(path.resolve(filePath));
+  } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }
 });
@@ -167,7 +210,7 @@ router.get("/:taskId", async (req, res) => {
       "SELECT * FROM task_attachments WHERE task_id = ? ORDER BY created_at DESC",
       [req.params.taskId]
     );
-    const data = attachments.map((a) => ({ ...a, url: `/uploads/${a.filename}` }));
+    const data = attachments.map((a) => ({ ...a, url: `/api/upload/file/${a.id}` }));
     res.json({ success: true, data });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });

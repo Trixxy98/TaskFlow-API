@@ -190,7 +190,5 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 ## 10. Open items / next
 
 1. Stripe Checkout + webhooks using `stripe_customer_id` / `stripe_subscription_id`.
-2. Enforce plan limits inside AI `create_task` / `create_project` tools (today REST create is gated; AI insert is not).
-3. Persist notes server-side if they must sync across devices.
-4. Drop or hide unused `workspaces` / `workspace_members` tables when safe.
-5. Align `JWT_EXPIRES_IN` in `.env.example` with the intended access-token lifetime (code default is `15m`).
+2. Persist notes server-side if they must sync across devices.
+3. Drop or hide unused `workspaces` / `workspace_members` tables when safe.
