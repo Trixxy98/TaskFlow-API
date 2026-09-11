@@ -88,7 +88,7 @@ const options = {
             originalname: { type: "string", example: "report.pdf" },
             mimetype: { type: "string", example: "application/pdf" },
             size: { type: "integer", example: 204800 },
-            url: { type: "string", example: "/uploads/1721234567-123456789.pdf" },
+            url: { type: "string", example: "/api/upload/file/1" },
           },
         },
       },

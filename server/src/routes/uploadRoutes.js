@@ -36,6 +36,22 @@ const upload = multer({
 
 router.use(auth);
 
+const uploadsDir = path.join(__dirname, "../../uploads");
+
+const removeUploadedFile = (fileName) => {
+  if (!fileName) return;
+  const filePath = path.join(uploadsDir, path.basename(fileName));
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+};
+
+const getOwnedTask = async (taskId, userId) => {
+  const [[task]] = await db.query(
+    "SELECT id FROM tasks WHERE id = ? AND user_id = ?",
+    [taskId, userId]
+  );
+  return task || null;
+};
+
 /**
  * @swagger
  * tags:
@@ -88,14 +104,16 @@ router.use(auth);
 router.post("/:taskId", requireFeature("attachments"), upload.single("file"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: "No file was uploaded" });
-
     const { taskId } = req.params;
-
+    const task = await getOwnedTask(taskId, req.user.id);
+    if (!task) {
+      removeUploadedFile(req.file.filename);
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
     const [result] = await db.query(
       "INSERT INTO task_attachments (task_id, filename, originalname, mimetype, size) VALUES (?, ?, ?, ?, ?)",
       [taskId, req.file.filename, req.file.originalname, req.file.mimetype, req.file.size]
     );
-
     res.status(201).json({
       success: true,
       data: {
@@ -105,9 +123,53 @@ router.post("/:taskId", requireFeature("attachments"), upload.single("file"), as
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size,
-        url: `/uploads/${req.file.filename}`,
+        url: `/api/upload/file/${result.insertId}`,
       },
     });
+  } catch (e) {
+    if (req.file) removeUploadedFile(req.file.filename);
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/upload/file/{id}:
+ *   get:
+ *     summary: Download an attachment (owner only)
+ *     tags: [Uploads]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: File stream
+ *       404:
+ *         description: File not found
+ */
+router.get("/file/:id", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT a.* FROM task_attachments a
+       INNER JOIN tasks t ON t.id = a.task_id
+       WHERE a.id = ? AND t.user_id = ?`,
+      [req.params.id, req.user.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ success: false, message: "File not found" });
+
+    const filePath = path.join(uploadsDir, path.basename(rows[0].filename));
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: "File not found" });
+    }
+
+    res.setHeader("Content-Type", rows[0].mimetype);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(rows[0].originalname)}"`
+    );
+    return res.sendFile(path.resolve(filePath));
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }
@@ -141,11 +203,14 @@ router.post("/:taskId", requireFeature("attachments"), upload.single("file"), as
  */
 router.get("/:taskId", async (req, res) => {
   try {
+    const task = await getOwnedTask(req.params.taskId, req.user.id);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+
     const [attachments] = await db.query(
       "SELECT * FROM task_attachments WHERE task_id = ? ORDER BY created_at DESC",
       [req.params.taskId]
     );
-    const data = attachments.map((a) => ({ ...a, url: `/uploads/${a.filename}` }));
+    const data = attachments.map((a) => ({ ...a, url: `/api/upload/file/${a.id}` }));
     res.json({ success: true, data });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
@@ -180,12 +245,15 @@ router.get("/:taskId", async (req, res) => {
  */
 router.delete("/file/:id", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM task_attachments WHERE id = ?", [req.params.id]);
+    const [rows] = await db.query(
+      `SELECT a.* FROM task_attachments a
+       INNER JOIN tasks t ON t.id = a.task_id
+       WHERE a.id = ? AND t.user_id = ?`,
+      [req.params.id, req.user.id]
+    );
     if (rows.length === 0) return res.status(404).json({ success: false, message: "File not found" });
 
-    const filePath = path.join(__dirname, "../../uploads", rows[0].filename);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-
+    removeUploadedFile(rows[0].filename);
     await db.query("DELETE FROM task_attachments WHERE id = ?", [req.params.id]);
     res.json({ success: true });
   } catch (e) {

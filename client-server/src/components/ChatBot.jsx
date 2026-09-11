@@ -26,9 +26,12 @@ export default function ChatBot({ onTasksUpdated, user }) {
     setMessages((prev) => [...prev, { role: "user", text }]);
     setLoading(true);
 
+    const MAX_HISTORY = 16;
+    const historyToSend = chatHistory.slice(-MAX_HISTORY);
+
     let res;
     try {
-      res = await sendChatMessage(text, chatHistory);
+      res = await sendChatMessage(text, historyToSend);
     } catch {
       setMessages((prev) => [...prev, { role: "error", text: "Failed to connect to the server. Please try again." }]);
       setLoading(false);
@@ -41,7 +44,7 @@ export default function ChatBot({ onTasksUpdated, user }) {
         ...prev,
         { role: "user", parts: [{ text }] },
         { role: "model", parts: [{ text: res.reply }] },
-      ]);
+      ].slice(-MAX_HISTORY));
       const taskChanged = res.actions?.some((a) =>
         ["create_task", "update_task", "delete_task"].includes(a.tool)
       );

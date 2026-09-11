@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { hasProFeature } from "./UpgradeGate";
 
 const NAV_SECTIONS = [
   {
@@ -116,7 +117,7 @@ export default function Sidebar({ user, onLogout, tasks, theme, setTheme, unread
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const badge = getBadge(item.id);
-                  const locked = user?.plan !== "pro" && (item.id === "notes" || item.id === "calendar");
+                  const locked = (item.id === "notes" || item.id === "calendar") && !hasProFeature(user, item.id);
                   return (
                     <button
                       key={item.id}

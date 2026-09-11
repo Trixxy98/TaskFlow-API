@@ -93,9 +93,13 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
     getSubscription().then((res) => {
-      if (res.success) applyPlan(res.data);
+      if (active && res.success) applyPlan(res.data);
     });
+    return () => {
+      active = false;
+    };
   }, [user?.id, applyPlan]);
 
   const handleLogin = (userData) => {

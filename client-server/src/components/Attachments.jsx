@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getAttachments, uploadFile, deleteAttachment } from "../services/api";
+import { getAttachments, uploadFile, deleteAttachment, fetchAttachmentBlob } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 const formatSize = (bytes) => {
@@ -7,6 +7,60 @@ const formatSize = (bytes) => {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
+
+function AttachmentPreview({ att }) {
+  const [src, setSrc] = useState(null);
+
+  useEffect(() => {
+    let objectUrl;
+    let cancelled = false;
+
+    fetchAttachmentBlob(att.id).then((blob) => {
+      if (!blob || cancelled) return;
+      objectUrl = URL.createObjectURL(blob);
+      if (cancelled) {
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+      setSrc(objectUrl);
+    });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [att.id]);
+
+  const isImage = att.mimetype?.startsWith("image/");
+
+  if (isImage) {
+    return (
+      <a href={src || "#"} target="_blank" rel="noreferrer" onClick={(e) => { if (!src) e.preventDefault(); }}>
+        {src ? (
+          <img
+            src={src}
+            alt={att.originalname}
+            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+          />
+        ) : (
+          <span className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm">🖼️</span>
+        )}
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={src || "#"}
+      target="_blank"
+      rel="noreferrer"
+      onClick={(e) => { if (!src) e.preventDefault(); }}
+      className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0"
+    >
+      <span className="text-red-500 text-lg">📄</span>
+    </a>
+  );
+}
 
 export default function Attachments({ taskId, locked = false }) {
   const navigate = useNavigate();
@@ -45,8 +99,6 @@ export default function Attachments({ taskId, locked = false }) {
     const file = e.dataTransfer.files[0];
     if (file) handleUpload(file);
   };
-
-  const isImage = (mimetype) => mimetype.startsWith("image/");
 
   return (
     <div className="mt-3">
@@ -103,26 +155,7 @@ export default function Attachments({ taskId, locked = false }) {
         <div className="space-y-2">
           {attachments.map((att) => (
             <div key={att.id} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 group">
-              {/* Preview */}
-              {isImage(att.mimetype) ? (
-                <a href={`http://localhost:3001${att.url}`} target="_blank" rel="noreferrer">
-                  <img
-  src={`http://localhost:3001${att.url}`}
-  alt={att.originalname}
-  className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-  onError={(e) => {
-    e.target.style.display = "none";
-    e.target.nextSibling?.style.removeProperty("display");
-  }}
-/>
-<span className="text-2xl hidden">🖼️</span>
-                </a>
-              ) : (
-                <a href={`http://localhost:3001${att.url}`} target="_blank" rel="noreferrer"
-                  className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-red-500 text-lg">📄</span>
-                </a>
-              )}
+              <AttachmentPreview att={att} />
 
               {/* Info */}
               <div className="flex-1 min-w-0">

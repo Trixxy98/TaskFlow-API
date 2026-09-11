@@ -1,5 +1,5 @@
 const { db } = require("../config/database");
-const { assertCanCreateTask } = require("../services/subscriptionService");
+const { assertCanCreateTask, withUserLock } = require("../services/subscriptionService");
 
 const sendServerError = (res, error) => {
   if (error.code === "PLAN_LIMIT" || error.code === "UPGRADE_REQUIRED") {
@@ -14,6 +14,22 @@ const sendServerError = (res, error) => {
 };
 
 const VALID_STATUS = ["pending", "completed"];
+
+const syncStatusFields = (current, {status, kanban_status}) => {
+  let nextStatus = status !== undefined ? status : current.status;
+  let nextKanban = kanban_status !== undefined ? kanban_status : current.kanban_status;
+
+  if (status !== undefined && kanban_status === undefined) {
+    if (status === "completed") nextKanban = "done";
+    else if (current.kanban_status === "done") nextKanban = "todo";
+  }
+
+  if (kanban_status !== undefined && status === undefined) {
+    nextStatus = kanban_status === "done" ? "completed" : "pending";
+  }
+
+  return {nextStatus, nextKanban};
+};
 
 const getAllTasks = async (req, res) => {
   try {
@@ -63,14 +79,21 @@ const createTask = async (req, res) => {
       return res.status(400).json({ success: false, message: "Title is required" });
     }
 
-    await assertCanCreateTask(userId);
+    const newTask = await withUserLock(userId, async (conn) => {
+      await assertCanCreateTask(userId, conn);
 
-    const [result] = await db.query(
-      "INSERT INTO tasks (user_id, title, description, due_date, priority, kanban_status, project) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [userId, title, description || null, due_date || null, priority || "medium", kanban_status || "todo", project || null]
-    );
-    const [newTask] = await db.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
-    res.status(201).json({ success: true, message: "Task created successfully", data: newTask[0] });
+      const initialKanban = kanban_status || "todo";
+      const initialStatus = initialKanban === "done" ? "completed" : "pending";
+
+      const [result] = await conn.query(
+        "INSERT INTO tasks (user_id, title, description, status, due_date, priority, kanban_status, project) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [userId, title, description || null, initialStatus, due_date || null, priority || "medium", initialKanban, project || null]
+      );
+      const [rows] = await conn.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
+      return rows[0];
+    });
+
+    res.status(201).json({ success: true, message: "Task created successfully", data: newTask });
   } catch (error) {
     return sendServerError(res, error);
   }
@@ -92,16 +115,17 @@ const updateTask = async (req, res) => {
     }
 
     const current = rows[0];
+    const {nextStatus, nextKanban} = syncStatusFields(current, {status, kanban_status});
 
     await db.query(
       "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, priority = ?, kanban_status = ?, project = ? WHERE id = ?",
       [
         title || current.title,
         description !== undefined ? description : current.description,
-        status || current.status,
+        nextStatus,
         due_date !== undefined ? due_date : current.due_date,
         priority || current.priority,
-        kanban_status !== undefined ? kanban_status : current.kanban_status,
+        nextKanban,
         project !== undefined ? project : current.project,
         taskId,
       ]
