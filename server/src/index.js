@@ -10,6 +10,7 @@ require("dotenv").config();
 
 const { testConnection } = require("./config/database");
 const { initSocket } = require("./config/socket");
+const { startDueDateNotificationJob } = require("./services/dueDateNotificationJob");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const { apiLimiter } = require("./middleware/rateLimiter");
@@ -68,6 +69,7 @@ const startServer = async () => {
   await testConnection();
   httpServer.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+    startDueDateNotificationJob();
   });
 };
 

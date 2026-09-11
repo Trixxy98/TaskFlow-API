@@ -10,7 +10,7 @@ const NOTIF_CONFIG = {
   default: { icon: Bell, color: "bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700", iconColor: "text-gray-400" },
 };
 
-export default function Notifications({ tasks, onUnreadChange }) {
+export default function Notifications({ onUnreadChange }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
@@ -58,23 +58,9 @@ export default function Notifications({ tasks, onUnreadChange }) {
     return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   };
 
-  // Task-based notifications
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const taskNotifs = tasks
-    .filter((t) => t.due_date && t.status !== "completed")
-    .map((t) => {
-      const due = new Date(t.due_date); due.setHours(0, 0, 0, 0);
-      const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-      if (diff < 0) return { id: `task-${t.id}`, type: "task_overdue", title: "Task Overdue!", message: `"${t.title}" passed its deadline ${Math.abs(diff)} days ago`, is_read: false, created_at: new Date().toISOString() };
-      if (diff === 0) return { id: `task-${t.id}`, type: "task_due_today", title: "Due Today!", message: `"${t.title}" needs to be completed today`, is_read: false, created_at: new Date().toISOString() };
-      if (diff === 1) return { id: `task-${t.id}`, type: "task_due_tomorrow", title: "Due Tomorrow", message: `"${t.title}" needs to be completed tomorrow`, is_read: false, created_at: new Date().toISOString() };
-      return null;
-    })
-    .filter(Boolean);
-
-  const allNotifs = [...notifications, ...taskNotifs];
-  const unread = allNotifs.filter((n) => !n.is_read);
-  const filtered = activeTab === "unread" ? unread : allNotifs;
+  
+  const unread = notifications.filter((n) => !n.is_read);
+  const filtered = activeTab === "unread" ? unread : notifications;
 
   return (
     <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
@@ -133,7 +119,7 @@ export default function Notifications({ tasks, onUnreadChange }) {
             return (
               <div
                 key={notif.id}
-                onClick={() => !notif.is_read && typeof notif.id === "number" && handleRead(notif.id)}
+                onClick={() => !notif.is_read && handleRead(notif.id)}
                 className={`rounded-2xl border px-4 py-4 flex items-start gap-3 transition group cursor-pointer ${config.color} ${
                   !notif.is_read ? "opacity-100" : "opacity-60"
                 }`}

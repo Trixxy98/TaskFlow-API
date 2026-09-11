@@ -107,6 +107,15 @@ export default function App() {
     navigate("/dashboard");
   };
 
+  const handleUserUpdated = (partial) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = {...prev, ...partial};
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
+  };
+
   const handleLogout = async () => {
     await logoutUser();
     localStorage.removeItem("token");
@@ -193,10 +202,10 @@ export default function App() {
           />
           <Route path="/completed" element={<Completed {...sharedProps} />} />
           <Route path="/feedback" element={<Feedback tasks={tasks} />} />
-          <Route path="/notifications" element={<Notifications tasks={tasks} onUnreadChange={setUnreadCount} />} />
+          <Route path="/notifications" element={<Notifications onUnreadChange={setUnreadCount} />} />
           <Route path="/help" element={<Help />} />
           <Route path="/pricing" element={<Pricing user={user} onPlanChange={applyPlan} />} />
-          <Route path="/settings" element={<Settings user={user} />} />
+          <Route path="/settings" element={<Settings user={user} onUserUpdated={handleUserUpdated} />} />
           <Route path="/profile" element={<Profile user={user} tasks={tasks} onLogout={handleLogout} />} />
         </Route>
       </Route>

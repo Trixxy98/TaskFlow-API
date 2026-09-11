@@ -4,6 +4,7 @@ const authController = require("../controllers/authController");
 const { authLimiter } = require("../middleware/rateLimiter");
 const validate = require("../middleware/validate");
 const authValidators = require("../validators/auth.validators");
+const auth = require("../middleware/authMiddleware");
 
 /**
  * @swagger
@@ -213,5 +214,35 @@ router.post("/forgot-password", authLimiter, validate(authValidators.forgotPassw
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/reset-password", validate(authValidators.resetPassword), authController.resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get the authenticated user's profile and notification preferences
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Current user
+ *   patch:
+ *     summary: Update name and/or notification preferences
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               notifyOverdue: { type: boolean }
+ *               notifyDueToday: { type: boolean }
+ *               notifyDueTomorrow: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: Updated user
+ */
+router.get("/me", auth, authController.getMe);
+router.patch("/me", auth, validate(authValidators.updateMe), authController.updateMe);
 
 module.exports = router;
