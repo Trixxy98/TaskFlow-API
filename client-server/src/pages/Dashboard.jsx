@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import Attachments from "../components/Attachments";
 import UpgradeGate from "../components/UpgradeGate";
+import { Check, CalendarDays, Inbox, ListTodo, BarChart3, Lock, Plus, X } from "lucide-react";
 
 const PRIORITY_CONFIG = {
   high:   { label: "High",   color: "text-red-500",    bg: "bg-red-50 dark:bg-red-900/20",    border: "border-red-200 dark:border-red-800"   },
@@ -148,7 +149,7 @@ export default function Dashboard({ user, tasks, setTasks }) {
       <div className="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
       {/* Greeting */}
       <div className="mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Hello, {user.name} 👋</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Hello, {user.name}</h2>
         <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
           {tasks.length === 0 ? "No tasks yet. Start adding one now!" : `${completedCount} of ${tasks.length} tasks completed`}
         </p>
@@ -182,20 +183,24 @@ export default function Dashboard({ user, tasks, setTasks }) {
       {/* Tabs */}
       <div className="flex gap-1.5 mb-5">
         {[
-          { id: "tasks", label: "📋 Tasks" },
-          { id: "charts", label: "📊 Analytics" },
-        ].map((tab) => (
+          { id: "tasks", label: "Tasks", icon: ListTodo },
+          { id: "charts", label: "Analytics", icon: BarChart3 },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${
+            className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium transition ${
               activeTab === tab.id ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 border border-gray-200 dark:border-gray-700"
             }`}
           >
+            <Icon className="w-3.5 h-3.5" strokeWidth={2} />
             {tab.label}
-            {tab.id === "charts" && !canUseAnalytics ? " 🔒" : ""}
+            {tab.id === "charts" && !canUseAnalytics && <Lock className="w-3 h-3" strokeWidth={2} />}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── TASKS TAB ── */}
@@ -225,12 +230,12 @@ export default function Dashboard({ user, tasks, setTasks }) {
                 onChange={(e) => setNewPriority(e.target.value)}
                 className="text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 outline-none focus:border-gray-400 dark:focus:border-gray-500 bg-transparent"
               >
-                <option value="high">🔴 High</option>
-                <option value="medium">🟡 Medium</option>
-                <option value="low">🟢 Low</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
               </select>
-              <button type="submit" className="ml-auto bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-5 py-1.5 rounded-full transition font-medium">
-                + Add
+              <button type="submit" className="ml-auto inline-flex items-center gap-1 bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-5 py-1.5 rounded-full transition font-medium">
+                <Plus className="w-3.5 h-3.5" /> Add
               </button>
             </div>
           </form>
@@ -253,7 +258,7 @@ export default function Dashboard({ user, tasks, setTasks }) {
           {/* Task List */}
           {filteredTasks.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-4xl mb-3">🎉</p>
+              <Inbox className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
               <p className="text-gray-400 text-sm">No tasks here</p>
             </div>
           ) : (
@@ -268,7 +273,7 @@ export default function Dashboard({ user, tasks, setTasks }) {
                         task.status === "completed" ? "bg-emerald-500 border-emerald-500" : "border-gray-300 hover:border-gray-900"
                       }`}
                     >
-                      {task.status === "completed" && <span className="text-white text-xs">✓</span>}
+                      {task.status === "completed" && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </button>
 
                     <div className="flex-1 min-w-0">
@@ -293,13 +298,13 @@ export default function Dashboard({ user, tasks, setTasks }) {
                               onChange={(e) => setEditingPriority(e.target.value)}
                               className="text-xs border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 outline-none bg-white dark:bg-gray-950 text-gray-600 dark:text-gray-300"
                             >
-                              <option value="high">🔴 High</option>
-                              <option value="medium">🟡 Medium</option>
-                              <option value="low">🟢 Low</option>
+                              <option value="high">High</option>
+                              <option value="medium">Medium</option>
+                              <option value="low">Low</option>
                             </select>
                           </div>
                           <div className="flex gap-2">
-                              <button onClick={() => handleEditSave(task)} className="bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded-full transition">✓ Save</button>
+                              <button onClick={() => handleEditSave(task)} className="inline-flex items-center gap-1 bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded-full transition">Save</button>
                               <button onClick={() => setEditingId(null)} className="border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 text-xs px-4 py-1.5 rounded-full transition">Cancel</button>
                           </div>
                               <Attachments taskId={task.id} locked={!user?.features?.attachments && !isPro} />
@@ -313,9 +318,10 @@ export default function Dashboard({ user, tasks, setTasks }) {
                           <div className="flex flex-wrap items-center gap-2 mt-1.5">
                             <span className={`text-xs px-2 py-0.5 rounded-full ${p.bg} ${p.color}`}>{p.label}</span>
                             {task.due_date && (
-                              <span className={`text-xs ${task.status === "completed" ? "text-gray-300" : isOverdue(task.due_date) ? "text-red-400" : "text-gray-400"}`}>
-                                📅 {formatDate(task.due_date)}
-                                {isOverdue(task.due_date) && task.status !== "completed" && " • Overdue!"}
+                              <span className={`inline-flex items-center gap-1 text-xs ${task.status === "completed" ? "text-gray-300" : isOverdue(task.due_date) ? "text-red-400" : "text-gray-400"}`}>
+                                <CalendarDays className="w-3 h-3" />
+                                {formatDate(task.due_date)}
+                                {isOverdue(task.due_date) && task.status !== "completed" && " · Overdue"}
                               </span>
                             )}
                           </div>
@@ -325,7 +331,9 @@ export default function Dashboard({ user, tasks, setTasks }) {
                       )}
                     </div>
 
-                    <button onClick={() => handleDelete(task.id)} className="text-gray-200 hover:text-red-400 transition opacity-0 group-hover:opacity-100">✕</button>
+                    <button onClick={() => handleDelete(task.id)} className="text-gray-200 hover:text-red-400 transition opacity-0 group-hover:opacity-100 p-0.5" aria-label="Delete task">
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 );
               })}

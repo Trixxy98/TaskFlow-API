@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PRIORITY_COLOR = {
   high: "bg-red-100 dark:bg-red-900/20 text-red-600 border-red-200 dark:border-red-800",
@@ -47,9 +48,13 @@ export default function CalendarView({ tasks }) {
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm dark:shadow-none p-5 mb-5">
         {/* Month navigation */}
         <div className="flex items-center justify-between mb-5">
-          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition">←</button>
+          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition" aria-label="Previous month">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 capitalize">{monthName}</h3>
-          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition">→</button>
+          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition" aria-label="Next month">
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Day headers */}

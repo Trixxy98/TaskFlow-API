@@ -100,7 +100,7 @@ White/`gray-900` surface, `border`, `rounded-2xl`, `p-5` or `p-8`. Used for task
 
 Centered lock marketing block:
 
-- Glyph `✦`
+- Lucide `Sparkles` mark
 - Title + one-line description
 - **Upgrade to Pro** → `/pricing`
 
@@ -108,7 +108,9 @@ Centered lock marketing block:
 
 ### 6.3 Empty state
 
-Muted `text-sm` inside a card. No illustration except Notes (`📄`) and Chat lock (`🔒`).
+Muted `text-sm` plus a Lucide icon (`w-10 h-10`, `text-gray-300`). Notes page covers may still use emoji as content, not chrome.
+
+Icons: **Lucide** (`strokeWidth` 1.75, typically `w-4 h-4`) for navigation, actions, and empty states.
 
 ### 6.4 ChatBot
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import useDebounce from "../hooks/useDebounce";
+import { Search as SearchIcon, Check, CalendarDays, X } from "lucide-react";
 
 const PRIORITY_COLOR = {
   high: "bg-red-50 dark:bg-red-900/20 text-red-500",
@@ -34,7 +35,7 @@ export default function Search({ tasks, onToggle, onDelete }) {
       </div>
 
       <div className="relative mb-6">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600">⌕</span>
+        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 dark:text-gray-600" />
         <input
           type="text"
           placeholder="Type to search..."
@@ -47,12 +48,12 @@ export default function Search({ tasks, onToggle, onDelete }) {
 
       {query === "" ? (
         <div className="text-center py-16">
-          <p className="text-4xl mb-3">⌕</p>
+          <SearchIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
           <p className="text-gray-400 dark:text-gray-500 text-sm">Type something to start searching</p>
         </div>
       ) : results.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-4xl mb-3">🔍</p>
+          <SearchIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
           <p className="text-gray-400 dark:text-gray-500 text-sm">No tasks found for &quot;{query}&quot;</p>
         </div>
       ) : (
@@ -71,7 +72,7 @@ export default function Search({ tasks, onToggle, onDelete }) {
                     : "border-gray-300 dark:border-gray-600 hover:border-gray-900 dark:hover:border-gray-400"
                 }`}
               >
-                {task.status === "completed" && <span className="text-white text-xs">✓</span>}
+                {task.status === "completed" && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
               </button>
 
               <div className="flex-1 min-w-0">
@@ -83,7 +84,10 @@ export default function Search({ tasks, onToggle, onDelete }) {
                     {task.priority || "medium"}
                   </span>
                   {task.due_date && (
-                    <span className="text-xs text-gray-400 dark:text-gray-500">📅 {formatDate(task.due_date)}</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                      <CalendarDays className="w-3 h-3" />
+                      {formatDate(task.due_date)}
+                    </span>
                   )}
                 </div>
               </div>
@@ -92,7 +96,7 @@ export default function Search({ tasks, onToggle, onDelete }) {
                 onClick={() => onDelete(task.id)}
                 className="text-gray-200 dark:text-gray-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
           ))}

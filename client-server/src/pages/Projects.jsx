@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getProjects, createProject, deleteProject, updateTask } from "../services/api";
+import { Folder, Plus, X } from "lucide-react";
 
 const COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"];
 
@@ -60,8 +61,8 @@ export default function Projects({ tasks, setTasks }) {
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Projects</h2>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{projects.length} active projects</p>
         </div>
-        <button onClick={() => { setPlanError(""); setShowForm(true); }} className="bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-xl transition font-medium">
-          + New Project
+        <button onClick={() => { setPlanError(""); setShowForm(true); }} className="inline-flex items-center gap-1.5 bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-xl transition font-medium">
+          <Plus className="w-4 h-4" /> New Project
         </button>
       </div>
 
@@ -113,7 +114,9 @@ export default function Projects({ tasks, setTasks }) {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-gray-400 dark:text-gray-500">{done}/{ptasks.length} completed</span>
-                    <button onClick={() => handleDelete(project.id)} className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition text-sm">✕</button>
+                    <button onClick={() => handleDelete(project.id)} className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition p-0.5" aria-label="Delete project">
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
                 <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mb-4">
@@ -160,7 +163,7 @@ export default function Projects({ tasks, setTasks }) {
 
           {projects.length === 0 && unassigned.length === 0 && (
             <div className="text-center py-20">
-              <p className="text-4xl mb-3">📁</p>
+              <Folder className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
               <p className="text-gray-400 dark:text-gray-500 text-sm">No tasks yet. Add a task first!</p>
             </div>
           )}

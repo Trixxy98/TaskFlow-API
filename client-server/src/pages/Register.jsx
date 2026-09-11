@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../services/api";
+import BrandMark from "../components/BrandMark";
 
 const PASSWORD_RULES = [
   {
@@ -65,7 +66,9 @@ export default function Register() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4 transition-colors duration-200">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <span className="text-4xl">✦</span>
+          <div className="flex justify-center">
+            <BrandMark size="lg" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-3 tracking-tight">TaskFlow</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Create a new account</p>
         </div>

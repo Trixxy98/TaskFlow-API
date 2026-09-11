@@ -35,7 +35,9 @@ const SlashCommandsList = forwardRef(({ items, command }, ref) => {
       <p className="text-xs text-gray-400 dark:text-gray-500 px-3 py-2 border-b border-gray-100 dark:border-gray-800 font-medium uppercase tracking-wider">
         Blocks
       </p>
-      {items.map((item, index) => (
+          {items.map((item, index) => {
+            const Icon = item.icon;
+            return (
         <button
           key={index}
           onClick={() => selectItem(index)}
@@ -45,19 +47,20 @@ const SlashCommandsList = forwardRef(({ items, command }, ref) => {
               : "hover:bg-gray-50 dark:hover:bg-gray-800"
           }`}
         >
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold ${
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
             index === selectedIndex
               ? "bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-300"
               : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
           }`}>
-            {item.icon}
+            {Icon ? <Icon className="w-4 h-4" strokeWidth={1.75} /> : null}
           </div>
           <div>
             <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.title}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500">{item.description}</p>
           </div>
         </button>
-      ))}
+            );
+          })}
     </div>
   );
 });

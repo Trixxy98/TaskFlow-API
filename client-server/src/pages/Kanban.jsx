@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { updateTask } from "../services/api";
+import { CalendarDays, Columns3 } from "lucide-react";
 
 const COLUMNS = [
   { id: "todo",       label: "To Do",       color: "bg-gray-100 dark:bg-gray-900",     dot: "bg-gray-400"    },
@@ -62,8 +63,9 @@ function TaskCard({ task }) {
           {task.priority || "medium"}
         </span>
         {task.due_date && (
-          <span className={`text-xs ${isOverdue(task.due_date) && task.kanban_status !== "completed" ? "text-red-400" : "text-gray-400"}`}>
-            📅 {formatDate(task.due_date)}
+          <span className={`inline-flex items-center gap-1 text-xs ${isOverdue(task.due_date) && task.kanban_status !== "completed" ? "text-red-400" : "text-gray-400"}`}>
+            <CalendarDays className="w-3 h-3" />
+            {formatDate(task.due_date)}
           </span>
         )}
         {task.project && (
@@ -221,7 +223,7 @@ export default function Kanban({ tasks, setTasks }) {
 
       {tasks.length === 0 && (
         <div className="text-center py-20">
-          <p className="text-4xl mb-3">📋</p>
+          <Columns3 className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
           <p className="text-gray-400 text-sm">No tasks yet. Add one from the Dashboard first!</p>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { sendChatMessage } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { Bot, Lock, Send, X } from "lucide-react";
 
 export default function ChatBot({ onTasksUpdated, user }) {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ export default function ChatBot({ onTasksUpdated, user }) {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gray-900 dark:bg-gray-800 flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🤖</span>
+              <Bot className="w-5 h-5 text-white" strokeWidth={1.75} />
               <div>
                 <p className="text-white text-sm font-semibold">TaskFlow AI</p>
                 <p className="text-gray-400 text-xs">Powered by Gemini</p>
@@ -81,8 +82,8 @@ export default function ChatBot({ onTasksUpdated, user }) {
               <button onClick={handleClear} className="text-gray-400 hover:text-gray-200 text-xs transition">
                 Clear
               </button>
-              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white text-xl leading-none transition">
-                ×
+              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white transition p-0.5" aria-label="Close chat">
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -91,7 +92,7 @@ export default function ChatBot({ onTasksUpdated, user }) {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {!isPro ? (
               <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                <p className="text-3xl mb-3">🔒</p>
+                <Lock className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-3" strokeWidth={1.5} />
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">AI is a Pro feature</p>
                 <p className="text-xs text-gray-400 mb-4">Create and manage tasks in natural language after you upgrade.</p>
                 <button
@@ -152,9 +153,10 @@ export default function ChatBot({ onTasksUpdated, user }) {
               <button
                 onClick={send}
                 disabled={!input.trim() || loading}
-                className="bg-gray-900 text-white px-3 py-2 rounded-xl disabled:opacity-40 hover:bg-gray-700 transition text-base"
+                className="bg-gray-900 text-white px-3 py-2 rounded-xl disabled:opacity-40 hover:bg-gray-700 transition"
+                aria-label="Send message"
               >
-                ↑
+                <Send className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -165,10 +167,10 @@ export default function ChatBot({ onTasksUpdated, user }) {
       {/* Toggle Button */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="w-13 h-13 bg-gray-900 text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center text-xl"
+        className="bg-gray-900 text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
         style={{ width: "52px", height: "52px" }}
       >
-        {open ? "×" : "🤖"}
+        {open ? <X className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
       </button>
     </div>
   );
