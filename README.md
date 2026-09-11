@@ -2,6 +2,16 @@
 
 A full-stack task management application with a clean minimal UI, AI-powered chatbot, dark mode, real-time notifications, and production-grade security.
 
+## Documentation
+
+| Doc | What it covers |
+|-----|----------------|
+| [docs/PRD.md](docs/PRD.md) | Product requirements, plans, user journeys |
+| [docs/DESIGN.md](docs/DESIGN.md) | UI layout, color, components, screens |
+| [docs/RULES.md](docs/RULES.md) | Product, security, API, and engineering rules |
+| [docs/SCHEMA.md](docs/SCHEMA.md) | MySQL tables, enums, client storage |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, auth, gates, deploy |
+
 ## Preview
 
 ![TaskFlow AI Chatbot](docs/chatbot-preview.png)
