@@ -47,4 +47,15 @@ const resetPassword = Joi.object({
   }),
 });
 
-module.exports = { register, login, forgotPassword, resetPassword };
+const updateMe = Joi.object({
+  name: Joi.string().min(2).max(100).trim(),
+  notifyOverdue: Joi.boolean(),
+  notifyDueToday: Joi.boolean(),
+  notifyDueTomorrow: Joi.boolean(),
+})
+  .min(1)
+  .messages({
+    "object.min": "Provide at least one field to update",
+  });
+
+module.exports = { register, login, forgotPassword, resetPassword, updateMe };

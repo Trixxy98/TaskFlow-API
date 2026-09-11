@@ -28,12 +28,17 @@ const runMigration = async () => {
       "ALTER TABLE users ADD COLUMN plan ENUM('free', 'pro') NOT NULL DEFAULT 'free'",
       "ALTER TABLE users ADD COLUMN stripe_customer_id VARCHAR(255) DEFAULT NULL",
       "ALTER TABLE users ADD COLUMN stripe_subscription_id VARCHAR(255) DEFAULT NULL",
+      "ALTER TABLE users ADD COLUMN notify_overdue TINYINT(1) NOT NULL DEFAULT 1",
+      "ALTER TABLE users ADD COLUMN notify_due_today TINYINT(1) NOT NULL DEFAULT 1",
+      "ALTER TABLE users ADD COLUMN notify_due_tomorrow TINYINT(1) NOT NULL DEFAULT 0",
+      "ALTER TABLE notifications ADD COLUMN dedupe_key VARCHAR(191) DEFAULT NULL",
+      "ALTER TABLE notifications ADD UNIQUE KEY unique_user_dedupe (user_id, dedupe_key)",
     ];
     for (const statement of extraColumns) {
       try {
         await db.query(statement);
       } catch (err) {
-        if (err.errno !== 1060) throw err;
+        if (err.errno !== 1060 && err.errno !== 1061) throw err;
       }
     }
 

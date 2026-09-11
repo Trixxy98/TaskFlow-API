@@ -133,6 +133,22 @@ export const resetPassword = async (token, password, confirmPassword) => {
   return res.json();
 };
 
+export const getMe = async () => {
+  const res = await fetchWithAuth(`${API_URL}/auth/me`, {
+    headers: {"Content-Type": "application/json"},
+  });
+  return res.json();
+};
+
+export const updateMe = async (data) => {
+  const res = await fetchWithAuth(`${API_URL}/auth/me`, {
+    method: "PATCH",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
 // ─── Tasks ────────────────────────────────────────────────────────────────────
 
 export const getTasks = async (params = {}) => {

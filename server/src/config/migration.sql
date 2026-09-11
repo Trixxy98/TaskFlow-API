@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS users (
   plan                    ENUM('free', 'pro') NOT NULL DEFAULT 'free',
   stripe_customer_id      VARCHAR(255)  DEFAULT NULL,
   stripe_subscription_id  VARCHAR(255)  DEFAULT NULL,
+  notify_overdue          TINYINT(1)    NOT NULL DEFAULT 1,
+  notify_due_today        TINYINT(1)    NOT NULL DEFAULT 1,
+  notify_due_tomorrow     TINYINT(1)    NOT NULL DEFAULT 0,
   created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -97,9 +100,11 @@ CREATE TABLE IF NOT EXISTS notifications (
   title      VARCHAR(255) NOT NULL,
   message    TEXT,
   data       JSON,
+  dedupe_key VARCHAR(191) DEFAULT NULL,
   is_read    TINYINT(1)   DEFAULT 0,
   created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_user_dedupe (user_id, dedupe_key)
 );
 
 -- ============================================================

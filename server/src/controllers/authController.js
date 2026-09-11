@@ -18,6 +18,16 @@ const COOKIE_OPTIONS = {
 const hashToken = (token) =>
   crypto.createHash("sha256").update(token).digest("hex");
 
+const toPublicUser = (user) => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  plan: user.plan === "pro" ? "pro" : "free",
+  notifyOverdue: Boolean(user.notify_overdue),
+  notifyDueToday: Boolean(user.notify_due_today),
+  notifyDueTomorrow: Boolean(user.notify_due_tomorrow),
+});
+
 const generateAndStoreRefreshToken = async (userId) => {
   const rawToken = crypto.randomBytes(40).toString("hex");
   const tokenHash = hashToken(rawToken);
@@ -94,12 +104,7 @@ const login = async (req, res) => {
       message: "Signed in successfully",
       data: {
         token: accessToken,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          plan: user.plan === "pro" ? "pro" : "free",
-        },
+        user: toPublicUser(user),
       },
     });
   } catch (error) {
@@ -231,4 +236,63 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, refreshAccessToken, logout, forgotPassword, resetPassword };
+const getMe = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id, name, email, plan, notify_overdue, notify_due_today, notify_due_tomorrow FROM users WHERE id = ?",
+      [req.user.id]
+    );
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+    res.json({ success: true, data: toPublicUser(rows[0]) });
+  } catch (error) {
+    return sendServerError(res, error);
+  }
+};
+
+const updateMe = async (req, res) => {
+  try {
+    const { name, notifyOverdue, notifyDueToday, notifyDueTomorrow } = req.body;
+    const fields = [];
+    const values = [];
+
+    if (name !== undefined) {
+      fields.push("name = ?");
+      values.push(name);
+    }
+    if (notifyOverdue !== undefined) {
+      fields.push("notify_overdue = ?");
+      values.push(notifyOverdue ? 1 : 0);
+    }
+    if (notifyDueToday !== undefined) {
+      fields.push("notify_due_today = ?");
+      values.push(notifyDueToday ? 1 : 0);
+    }
+    if (notifyDueTomorrow !== undefined) {
+      fields.push("notify_due_tomorrow = ?");
+      values.push(notifyDueTomorrow ? 1 : 0);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, message: "Provide at least one field to update" });
+    }
+
+    values.push(req.user.id);
+    await db.query(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`, values);
+
+    const [rows] = await db.query(
+      "SELECT id, name, email, plan, notify_overdue, notify_due_today, notify_due_tomorrow FROM users WHERE id = ?",
+      [req.user.id]
+    );
+    res.json({
+      success: true,
+      message: "Settings saved",
+      data: toPublicUser(rows[0]),
+    });
+  } catch (error) {
+    return sendServerError(res, error);
+  }
+};
+
+module.exports = { register, login, refreshAccessToken, logout, forgotPassword, resetPassword, getMe, updateMe };
