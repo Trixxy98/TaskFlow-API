@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { activatePro } from "../services/api";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import {
+  activatePro,
+  createCheckoutSession,
+  createPortalSession,
+  getSubscription,
+} from "../services/api";
 
 const FEATURES = [
   { name: "Tasks", free: "20 tasks", pro: "Unlimited" },
@@ -12,12 +18,66 @@ const FEATURES = [
 ];
 
 export default function Pricing({ user, onPlanChange }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const isPro = user?.plan === "pro";
   const canManualUpgrade = Boolean(user?.manualUpgrade);
+  const checkoutEnabled = Boolean(user?.checkoutEnabled);
+  const priceLabel = user?.proPriceLabel || "Pro";
 
-  const handleUpgrade = async () => {
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (!checkout) return;
+
+    if (checkout === "cancel") {
+      setInfo("Checkout canceled. You are still on Free.");
+      setSearchParams({}, { replace: true });
+      return;
+    }
+
+    if (checkout === "success") {
+      setInfo("Payment received. Refreshing your plan…");
+      getSubscription().then((res) => {
+        if (res.success) {
+          onPlanChange?.(res.data);
+          setInfo(
+            res.data.plan === "pro"
+              ? "You are now on Pro."
+              : "Payment received. Plan updates in a few seconds — refresh if needed."
+          );
+        }
+      });
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams, onPlanChange]);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    setError("");
+    const res = await createCheckoutSession();
+    if (res.success && res.data?.url) {
+      window.location.href = res.data.url;
+      return;
+    }
+    setError(res.message || "Unable to start checkout.");
+    setLoading(false);
+  };
+
+  const handlePortal = async () => {
+    setLoading(true);
+    setError("");
+    const res = await createPortalSession();
+    if (res.success && res.data?.url) {
+      window.location.href = res.data.url;
+      return;
+    }
+    setError(res.message || "Unable to open billing portal.");
+    setLoading(false);
+  };
+
+  const handleDemoUpgrade = async () => {
     setLoading(true);
     setError("");
     const res = await activatePro();
@@ -43,6 +103,11 @@ export default function Pricing({ user, onPlanChange }) {
           {error}
         </div>
       )}
+      {info && (
+        <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-2xl mb-5 text-sm text-center">
+          {info}
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
@@ -64,8 +129,8 @@ export default function Pricing({ user, onPlanChange }) {
 
         <div className="bg-gray-900 dark:bg-blue-600 rounded-3xl p-6 text-white shadow-sm">
           <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">Pro</p>
-          <p className="text-3xl font-bold mt-2">Coming soon</p>
-          <p className="text-sm text-white/70 mt-1 mb-5">Stripe checkout will be added next</p>
+          <p className="text-3xl font-bold mt-2">{priceLabel}</p>
+          <p className="text-sm text-white/70 mt-1 mb-5">Billed monthly via Stripe</p>
           <ul className="space-y-2 mb-6">
             {FEATURES.map((f) => (
               <li key={f.name} className="flex justify-between text-sm">
@@ -74,13 +139,36 @@ export default function Pricing({ user, onPlanChange }) {
               </li>
             ))}
           </ul>
+
           {isPro ? (
-            <div className="text-xs text-center text-white/80 py-2.5 rounded-xl bg-white/10">
-              You are on Pro
+            <div className="space-y-2">
+              <div className="text-xs text-center text-white/80 py-2.5 rounded-xl bg-white/10">
+                You are on Pro
+              </div>
+              {checkoutEnabled && (
+                <button
+                  type="button"
+                  onClick={handlePortal}
+                  disabled={loading}
+                  className="w-full bg-white/15 text-white text-sm font-medium py-2.5 rounded-xl hover:bg-white/25 transition disabled:opacity-50"
+                >
+                  {loading ? "Opening…" : "Manage billing"}
+                </button>
+              )}
             </div>
+          ) : checkoutEnabled ? (
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={loading}
+              className="w-full bg-white text-gray-900 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-100 transition disabled:opacity-50"
+            >
+              {loading ? "Redirecting…" : "Upgrade to Pro"}
+            </button>
           ) : canManualUpgrade ? (
             <button
-              onClick={handleUpgrade}
+              type="button"
+              onClick={handleDemoUpgrade}
               disabled={loading}
               className="w-full bg-white text-gray-900 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-100 transition disabled:opacity-50"
             >
@@ -88,7 +176,7 @@ export default function Pricing({ user, onPlanChange }) {
             </button>
           ) : (
             <div className="text-xs text-center text-white/80 py-2.5 rounded-xl bg-white/10">
-              Paid checkout is not enabled yet
+              Paid checkout is not configured yet
             </div>
           )}
         </div>

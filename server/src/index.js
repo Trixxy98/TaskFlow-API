@@ -42,6 +42,11 @@ app.use(cors({
   credentials: true,
 }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+app.post(
+  "/api/subscription/webhook",
+  express.raw({type: "application/json"}),
+  require("./routes/stripeWebhook")
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", apiLimiter);
@@ -68,12 +73,12 @@ app.use(errorHandler);
 const startServer = async () => {
   await testConnection();
   httpServer.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
     startDueDateNotificationJob();
   });
 };
 
 startServer().catch((err) => {
-  console.error("❌ Server startup failed:", err);
+  console.error("Server startup failed:", err);
   process.exit(1);
 });

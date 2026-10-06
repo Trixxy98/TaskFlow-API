@@ -79,6 +79,8 @@ export default function App() {
         usage: snapshot.usage,
         features: snapshot.features,
         manualUpgrade: snapshot.manualUpgrade,
+        checkoutEnabled: snapshot.checkoutEnabled,
+        proPriceLabel: snapshot.proPriceLabel,
       };
       localStorage.setItem("user", JSON.stringify(next));
       return next;

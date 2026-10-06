@@ -324,6 +324,22 @@ export const activatePro = async () => {
   return res.json();
 };
 
+export const createCheckoutSession = async () => {
+  const res = await fetchWithAuth(`${API_URL}/subscription/checkout`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+  });
+  return res.json();
+};
+
+export const createPortalSession = async () => {
+  const res = await fetchWithAuth(`${API_URL}/subscription/portal`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+  });
+  return res.json();
+};
+
 export const deleteNotification = async (id) => {
   const res = await fetchWithAuth(`${API_URL}/notifications/${id}`, {
     method: "DELETE",

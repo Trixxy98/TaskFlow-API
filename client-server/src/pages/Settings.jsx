@@ -70,7 +70,7 @@ export default function Settings({ user, onUserUpdated }) {
   return (
     <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
       <div className="mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Settings</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-red-900 dark:text-gray-100">Settings</h2>
         <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Manage your account and preferences</p>
       </div>
 
