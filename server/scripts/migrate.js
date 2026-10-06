@@ -33,7 +33,19 @@ const runMigration = async () => {
       "ALTER TABLE users ADD COLUMN notify_due_tomorrow TINYINT(1) NOT NULL DEFAULT 0",
       "ALTER TABLE notifications ADD COLUMN dedupe_key VARCHAR(191) DEFAULT NULL",
       "ALTER TABLE notifications ADD UNIQUE KEY unique_user_dedupe (user_id, dedupe_key)",
+      `CREATE TABLE IF NOT EXISTS notes (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        user_id    INT           NOT NULL,
+        title      VARCHAR(255)  NOT NULL DEFAULT 'Untitled',
+        emoji      VARCHAR(32)   NOT NULL DEFAULT '📄',
+        content    MEDIUMTEXT,
+        created_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_notes_user_id (user_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )`,
     ];
+
     for (const statement of extraColumns) {
       try {
         await db.query(statement);
@@ -42,10 +54,10 @@ const runMigration = async () => {
       }
     }
 
-    console.log(`✅ Migration completed — ${statements.length} statements executed`);
+    console.log(`Migration completed — ${statements.length} statements executed`);
     process.exit(0);
   } catch (err) {
-    console.error("❌ Migration failed:", err.message);
+    console.error("Migration failed:", err.message);
     process.exit(1);
   }
 };

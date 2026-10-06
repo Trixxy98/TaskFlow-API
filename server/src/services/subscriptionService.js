@@ -45,6 +45,10 @@ const getSnapshot = async (userId, conn = db) => {
     usage: { tasks, projects },
     features: config.features,
     manualUpgrade: isManualUpgradeEnabled(),
+    checkoutEnabled: Boolean(
+      process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRICE_ID
+    ),
+    proPriceLabel: process.env.STRIPE_PRO_PRICE_LABEL || "Pro",
   };
 };
 
@@ -76,10 +80,52 @@ const assertCanCreateProject = async (userId, conn = db) => {
   }
 };
 
-const setPlan = async (userId, plan) => {
-  await db.query("UPDATE users SET plan = ? WHERE id = ?", [normalizePlan(plan), userId]);
+const setPlan = async (userId, plan, extras = {}) => {
+  const fields = ["plan = ?"];
+  const values = [normalizePlan(plan)];
+
+  if (extras.stripeCustomerId !== undefined) {
+    fields.push("stripe_customer_id = ?");
+    values.push(extras.stripeCustomerId);
+  }
+  if (extras.stripeSubscriptionId !== undefined) {
+    fields.push("stripe_subscription_id = ?");
+    values.push(extras.stripeSubscriptionId);
+  }
+
+  values.push(userId);
+  await db.query(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`, values);
   return getSnapshot(userId);
 };
+
+const findUserIdByStripeCustomer = async (customerId) => {
+  if (!customerId) return null;
+  const [[row]] = await db.query(
+    "SELECT id FROM users WHERE stripe_customer_id = ? LIMIT 1",
+    [customerId]
+  );
+  return row?.id ?? null;
+};
+
+const findUserIdByStripeSubscription = async (subscriptionId) => {
+  if (!subscriptionId) return null;
+  const [[row]] = await db.query(
+    "SELECT id FROM users WHERE stripe_subscription_id = ? LIMIT 1",
+    [subscriptionId]
+  );
+  return row?.id ?? null;
+};
+const getBillingIds = async (userId) => {
+  const [[row]] = await db.query(
+    "SELECT stripe_customer_id, stripe_subscription_id FROM users WHERE id = ?",
+    [userId]
+  );
+  return {
+    stripeCustomerId: row?.stripe_customer_id || null,
+    stripeSubscriptionId: row?.stripe_subscription_id || null,
+  };
+};
+
 
 module.exports = {
   withUserLock,
@@ -88,4 +134,7 @@ module.exports = {
   assertCanCreateTask,
   assertCanCreateProject,
   setPlan,
+  findUserIdByStripeCustomer,
+  findUserIdByStripeSubscription,
+  getBillingIds,
 };

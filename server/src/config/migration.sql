@@ -148,3 +148,19 @@ CREATE TABLE IF NOT EXISTS task_attachments (
   created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
 );
+
+
+-- ============================================================
+-- NOTES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS notes (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT           NOT NULL,
+  title      VARCHAR(255)  NOT NULL DEFAULT 'Untitled',
+  emoji      VARCHAR(32)   NOT NULL DEFAULT '📄',
+  content    MEDIUMTEXT,
+  created_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_notes_user_id (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
