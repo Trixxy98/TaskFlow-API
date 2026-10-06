@@ -47,7 +47,7 @@ app.post(
   express.raw({type: "application/json"}),
   require("./routes/stripeWebhook")
 );
-app.use(express.json());
+app.use(express.json({limit: "512kb"}));
 app.use(cookieParser());
 app.use("/api", apiLimiter);
 
@@ -57,6 +57,7 @@ app.use("/api/projects", require("./routes/projectRoutes"));
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/notes", require("./routes/noteRoutes"));
 app.use("/api/ai", require("./routes/aiRoutes"));
 app.use("/api/subscription", require("./routes/subscriptionRoutes"));
 

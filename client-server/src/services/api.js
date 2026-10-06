@@ -316,6 +316,58 @@ export const getSubscription = async () => {
   return res.json();
 };
 
+// ─── Notes ─────────────────────────────────────────────────────────────────────
+
+const mapNote = (n) => ({
+  id: n.id,
+  title: n.title,
+  emoji: n.emoji,
+  content: n.content || "",
+  updatedAt: n.updated_at,
+});
+
+export const getNotes = async () => {
+  const res = await fetchWithAuth(`${API_URL}/notes`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  const json = await res.json();
+  if (json.success && Array.isArray(json.data)) {
+    json.data = json.data.map(mapNote);
+  }
+  return json;
+};
+
+export const createNote = async (data = {}) => {
+  const res = await fetchWithAuth(`${API_URL}/notes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (json.success && json.data) json.data = mapNote(json.data);
+  return json;
+};
+
+export const updateNote = async (id, data) => {
+  const res = await fetchWithAuth(`${API_URL}/notes/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (json.success && json.data) json.data = mapNote(json.data);
+  return json;
+};
+
+export const deleteNote = async (id) => {
+  const res = await fetchWithAuth(`${API_URL}/notes/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+};
+
+
 export const activatePro = async () => {
   const res = await fetchWithAuth(`${API_URL}/subscription/activate`, {
     method: "POST",
