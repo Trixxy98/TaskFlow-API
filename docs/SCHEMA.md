@@ -23,12 +23,8 @@ erDiagram
   users ||--o{ notes : owns
   users ||--o{ password_resets : has
   users ||--o{ refresh_tokens : has
-  users ||--o{ workspaces : leftover
-  users ||--o{ workspace_members : leftover
   tasks ||--o{ feedback : has
   tasks ||--o{ task_attachments : has
-  workspaces ||--o{ workspace_members : leftover
-  workspaces ||--o{ tasks : optional_fk
 
   users {
     int id PK
@@ -45,7 +41,6 @@ erDiagram
   tasks {
     int id PK
     int user_id FK
-    int workspace_id FK
     varchar title
     text description
     enum status
@@ -53,6 +48,7 @@ erDiagram
     enum kanban_status
     varchar project
     date due_date
+    enum recurrence
   }
   notes {
     int id PK
@@ -114,7 +110,6 @@ New users start on **free**. Feature matrix is not stored here; see `plans.js`.
 |--------|------|--------|
 | id | INT PK AI | |
 | user_id | INT NOT NULL FK → users.id CASCADE | |
-| workspace_id | INT NULL FK → workspaces.id SET NULL | Unused by product |
 | title | VARCHAR(255) NOT NULL | |
 | description | TEXT | |
 | status | ENUM('pending','completed') DEFAULT 'pending' | List/complete |
@@ -122,10 +117,11 @@ New users start on **free**. Feature matrix is not stored here; see `plans.js`.
 | kanban_status | ENUM('todo','inprogress','done') DEFAULT 'todo' | Board column |
 | project | VARCHAR(100) NULL | Label, not FK |
 | due_date | DATE | Calendar + due-date notifications |
+| recurrence | ENUM('none','daily','weekly','monthly') DEFAULT 'none' | Spawns next on complete |
 | created_at | TIMESTAMP | |
 | updated_at | TIMESTAMP ON UPDATE | |
 
-`status` and `kanban_status` are kept in sync by task create/update when the client or API sets completion (complete → `done`, reopen → `todo`).
+`status` and `kanban_status` are kept in sync by task create/update when the client or API sets completion (complete → `done`, reopen → `todo`). Completing a recurring task inserts a new pending row with the next due date (plan limits apply).
 
 ### 3.4 `feedback`
 
@@ -205,31 +201,9 @@ Binary files live in `server/uploads/{filename}`, not in MySQL. Served only via 
 
 Product cap: **100** notes per user (`noteService`). Pro-only via `requireFeature("notes")`.
 
-## 4. Tables (leftover — do not use in new features)
+## 4. Removed tables
 
-Kept so existing databases migrate without DROP. Product UI and routes must not depend on them.
-
-### 4.1 `workspaces`
-
-| Column | Type |
-|--------|------|
-| id | INT PK AI |
-| owner_id | INT NOT NULL FK → users.id CASCADE |
-| name | VARCHAR(100) NOT NULL DEFAULT 'My Workspace' |
-| created_at | TIMESTAMP |
-
-### 4.2 `workspace_members`
-
-| Column | Type |
-|--------|------|
-| id | INT PK AI |
-| workspace_id | INT NOT NULL FK → workspaces.id CASCADE |
-| user_id | INT NOT NULL FK → users.id CASCADE |
-| role | ENUM('owner','admin','member','viewer') DEFAULT 'member' |
-| status | ENUM('pending','accepted') DEFAULT 'pending' |
-| joined_at | TIMESTAMP |
-
-Unique `(workspace_id, user_id)`.
+`workspaces` and `workspace_members` were leftover from an old team product. `migrate.js` drops them (and `tasks.workspace_id`) on existing databases. Do not recreate them.
 
 ## 5. Enums (quick reference)
 
@@ -239,8 +213,7 @@ Unique `(workspace_id, user_id)`.
 | tasks.status | pending, completed |
 | tasks.priority | low, medium, high |
 | tasks.kanban_status | todo, inprogress, done |
-| workspace_members.role | owner, admin, member, viewer |
-| workspace_members.status | pending, accepted |
+| tasks.recurrence | none, daily, weekly, monthly |
 
 ## 6. Plan config (not a table)
 

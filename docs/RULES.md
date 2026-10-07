@@ -9,7 +9,7 @@ Related: [PRD.md](./PRD.md) · [DESIGN.md](./DESIGN.md) · [SCHEMA.md](./SCHEMA.
 ## 1. Product rules
 
 1. TaskFlow is **single-user**. A user only reads and writes their own rows (`user_id` = JWT `id`).
-2. Do not re-expose team/workspace APIs. `workspaces` and `workspace_members` tables are leftover schema, not product features.
+2. Do not re-expose team/workspace APIs. Leftover `workspaces` / `workspace_members` are dropped by migrate — do not recreate them.
 3. All UI and API messages are **English**.
 4. Free users may use: Dashboard/Tasks list, Projects (capped), Kanban, Table, Completed, Feedback, Notifications, Help, Settings, Profile.
 5. Pro-only: AI chat, file **upload**, analytics, calendar page, notes page.
@@ -83,6 +83,7 @@ Joi on POST/PUT/PATCH. Reject unknown misuse via schema; return 400 with English
 | Priority | `low` \| `medium` \| `high` (default medium) |
 | Kanban | `todo` \| `inprogress` \| `done` (default todo) |
 | Due date | ISO date, nullable |
+| Recurrence | `none` \| `daily` \| `weekly` \| `monthly` (default none) |
 | Project name | 1–100 |
 | Project color | `#RGB` or `#RRGGBB`, default `#6366f1` |
 | Feedback message | 1–2000 |

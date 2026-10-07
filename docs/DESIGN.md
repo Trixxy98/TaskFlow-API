@@ -131,7 +131,7 @@ Auth pages are public, centered, same card language. Task create is a compact ba
 | Route | Layout notes |
 |-------|----------------|
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | No sidebar. Auth card. |
-| `/dashboard`, `/tasks` | Tabs: Tasks / Analytics. Analytics tab is gated. |
+| `/dashboard`, `/tasks` | Tabs: Tasks / Analytics. Analytics tab is gated. Create/edit include recurrence select; recurring tasks show a small badge. |
 | `/projects` | Project cards + unassigned tasks. |
 | `/kanban` | Three columns, drag handles. |
 | `/table` | Sortable table. |

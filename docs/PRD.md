@@ -25,11 +25,10 @@ TaskFlow is a **single-user** workspace: sign in, manage your own tasks, and opt
 
 ## 3. Non-goals (current release)
 
-- Team collaboration, invites, roles, or shared workspaces (removed from product; leftover DB tables must not be exposed).
+- Team collaboration, invites, roles, or shared workspaces (removed from product; migrate drops leftover tables).
 - Mobile native apps.
 - Multi-language UI (copy is English only).
 - Public task sharing or unauthenticated task APIs.
-- Recurring tasks (not implemented yet).
 
 ## 4. Users
 
@@ -68,7 +67,7 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 | AUTH-2 | Login returns access JWT and sets httpOnly refresh cookie | Cookie `refreshToken`, `sameSite=strict`, `secure` in production |
 | AUTH-3 | Refresh rotates the refresh token | Old hash deleted; new cookie issued |
 | AUTH-4 | Logout invalidates refresh token and clears cookie | Subsequent refresh returns 401 |
-| AUTH-5 | Forgot / reset password | Token stored as SHA-256 hash; expired tokens rejected |
+| AUTH-5 | Forgot / reset password | Token SHA-256; email via SMTP when configured; non-prod may return `devResetUrl` |
 | AUTH-6 | One active refresh session per user | New login deletes previous refresh rows |
 | AUTH-7 | Frontend idle logout | 30 minutes without mouse/keyboard/scroll/touch |
 | AUTH-8 | `GET` / `PATCH /api/auth/me` | Name + notification prefs; email locked |
@@ -83,6 +82,7 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 | TSK-4 | Delete owned task | 200; 404 if not owned / missing |
 | TSK-5 | Dual status model | `status`: pending/completed; `kanban_status`: todo/inprogress/done |
 | TSK-6 | Inline edit on Dashboard | Click title to edit; toggle complete; delete |
+| TSK-7 | Recurring tasks | `recurrence`: none/daily/weekly/monthly; completing spawns next occurrence with advanced due date |
 
 ### 6.3 Projects
 
@@ -214,7 +214,5 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 
 ## 10. Open items / next
 
-1. Drop or hide unused `workspaces` / `workspace_members` tables when safe.
-2. Recurring tasks (optional product feature).
-3. Production email delivery for forgot-password (today: dev token in non-production).
-4. Stripe **live** mode webhook endpoint on the deployed API (not only CLI `stripe listen`).
+1. Stripe **live** mode webhook endpoint on the deployed API (not only CLI `stripe listen`).
+2. Configure production SMTP (`SMTP_*`) so forgot-password emails send outside development.

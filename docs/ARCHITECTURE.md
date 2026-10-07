@@ -74,8 +74,6 @@ TaskFlow API/
         └── validators/        # Joi schemas
 ```
 
-Leftover: `server/src/validators/team.validators.js` is unused. Ignore it for new work.
-
 ## 3. Runtime bootstrap (API)
 
 `server/src/index.js`:
@@ -294,6 +292,8 @@ Rate-limit counters are in-process. Multiple Railway replicas would not share th
 | `STRIPE_WEBHOOK_SECRET` | Webhook signature verify |
 | `STRIPE_PRICE_ID` | Pro subscription Price id |
 | `STRIPE_PRO_PRICE_LABEL` | Pricing page display string |
+| `APP_URL` | Password-reset link origin (falls back to `ALLOWED_ORIGIN`) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Forgot-password email |
 | `VITE_API_URL` | Frontend API base (must include `/api`) |
 
 ## 14. Deployment
