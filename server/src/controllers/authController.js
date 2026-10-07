@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { db } = require("../config/database");
+const { sendPasswordResetEmail } = require("../services/emailService");
 
 const sendServerError = (res, error) =>
   res.status(500).json({ success: false, message: error.message });
@@ -172,7 +173,7 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const [users] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
+    const [users] = await db.query("SELECT id, email FROM users WHERE email = ?", [email]);
 
     // Always respond with success to prevent email enumeration attacks
     const genericMessage = "If your email is registered, a reset link will be sent to you.";
@@ -186,19 +187,23 @@ const forgotPassword = async (req, res) => {
     const tokenHash = hashToken(rawToken);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Delete any existing reset token for this user
     await db.query("DELETE FROM password_resets WHERE user_id = ?", [userId]);
     await db.query(
       "INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)",
       [userId, tokenHash, expiresAt]
     );
 
+    const mail = await sendPasswordResetEmail(users[0].email, rawToken);
     const response = { success: true, message: genericMessage };
 
-    // In development, return the token directly for testing (no email service needed)
+    if (!mail.sent && process.env.NODE_ENV === "production") {
+      console.error("Password reset email not sent: SMTP is not configured");
+    }
+
+    // Non-production: expose link for local testing when SMTP is optional
     if (process.env.NODE_ENV !== "production") {
       response.devResetToken = rawToken;
-      response.devResetUrl = `${process.env.ALLOWED_ORIGIN || "http://localhost:5173"}/reset-password?token=${rawToken}`;
+      response.devResetUrl = mail.resetUrl;
     }
 
     res.json(response);

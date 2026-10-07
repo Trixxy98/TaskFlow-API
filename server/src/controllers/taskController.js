@@ -1,5 +1,6 @@
 const { db } = require("../config/database");
 const { assertCanCreateTask, withUserLock } = require("../services/subscriptionService");
+const { createNextOccurrence } = require("../services/recurrenceService");
 
 const sendServerError = (res, error) => {
   if (error.code === "PLAN_LIMIT" || error.code === "UPGRADE_REQUIRED") {
@@ -15,7 +16,7 @@ const sendServerError = (res, error) => {
 
 const VALID_STATUS = ["pending", "completed"];
 
-const syncStatusFields = (current, {status, kanban_status}) => {
+const syncStatusFields = (current, { status, kanban_status }) => {
   let nextStatus = status !== undefined ? status : current.status;
   let nextKanban = kanban_status !== undefined ? kanban_status : current.kanban_status;
 
@@ -28,7 +29,7 @@ const syncStatusFields = (current, {status, kanban_status}) => {
     nextStatus = kanban_status === "done" ? "completed" : "pending";
   }
 
-  return {nextStatus, nextKanban};
+  return { nextStatus, nextKanban };
 };
 
 const getAllTasks = async (req, res) => {
@@ -74,7 +75,7 @@ const getAllTasks = async (req, res) => {
 const createTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { title, description, due_date, priority, kanban_status, project } = req.body;
+    const { title, description, due_date, priority, kanban_status, project, recurrence } = req.body;
     if (!title) {
       return res.status(400).json({ success: false, message: "Title is required" });
     }
@@ -84,10 +85,23 @@ const createTask = async (req, res) => {
 
       const initialKanban = kanban_status || "todo";
       const initialStatus = initialKanban === "done" ? "completed" : "pending";
+      const initialRecurrence = recurrence || "none";
 
       const [result] = await conn.query(
-        "INSERT INTO tasks (user_id, title, description, status, due_date, priority, kanban_status, project) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [userId, title, description || null, initialStatus, due_date || null, priority || "medium", initialKanban, project || null]
+        `INSERT INTO tasks
+          (user_id, title, description, status, due_date, priority, kanban_status, project, recurrence)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userId,
+          title,
+          description || null,
+          initialStatus,
+          due_date || null,
+          priority || "medium",
+          initialKanban,
+          project || null,
+          initialRecurrence,
+        ]
       );
       const [rows] = await conn.query("SELECT * FROM tasks WHERE id = ?", [result.insertId]);
       return rows[0];
@@ -103,7 +117,8 @@ const updateTask = async (req, res) => {
   try {
     const userId = req.user.id;
     const taskId = req.params.id;
-    const { title, description, status, due_date, priority, kanban_status, project } = req.body;
+    const { title, description, status, due_date, priority, kanban_status, project, recurrence } =
+      req.body;
 
     const [rows] = await db.query(
       "SELECT * FROM tasks WHERE id = ? AND user_id = ?",
@@ -115,25 +130,50 @@ const updateTask = async (req, res) => {
     }
 
     const current = rows[0];
-    const {nextStatus, nextKanban} = syncStatusFields(current, {status, kanban_status});
+    const { nextStatus, nextKanban } = syncStatusFields(current, { status, kanban_status });
+    const nextRecurrence = recurrence !== undefined ? recurrence : current.recurrence || "none";
+    const wasPending = current.status !== "completed";
+    const becomingCompleted = wasPending && nextStatus === "completed";
 
-    await db.query(
-      "UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, priority = ?, kanban_status = ?, project = ? WHERE id = ?",
-      [
-        title || current.title,
-        description !== undefined ? description : current.description,
-        nextStatus,
-        due_date !== undefined ? due_date : current.due_date,
-        priority || current.priority,
-        nextKanban,
-        project !== undefined ? project : current.project,
-        taskId,
-      ]
-    );
+    const { updated, nextOccurrence } = await withUserLock(userId, async (conn) => {
+      await conn.query(
+        `UPDATE tasks SET
+          title = ?, description = ?, status = ?, due_date = ?, priority = ?,
+          kanban_status = ?, project = ?, recurrence = ?
+         WHERE id = ? AND user_id = ?`,
+        [
+          title || current.title,
+          description !== undefined ? description : current.description,
+          nextStatus,
+          due_date !== undefined ? due_date : current.due_date,
+          priority || current.priority,
+          nextKanban,
+          project !== undefined ? project : current.project,
+          nextRecurrence,
+          taskId,
+          userId,
+        ]
+      );
 
-    const [updated] = await db.query("SELECT * FROM tasks WHERE id = ?", [taskId]);
+      const [[row]] = await conn.query(
+        "SELECT * FROM tasks WHERE id = ? AND user_id = ?",
+        [taskId, userId]
+      );
 
-    res.json({ success: true, message: "Task updated successfully", data: updated[0] });
+      let spawned = null;
+      if (becomingCompleted && (row.recurrence || "none") !== "none") {
+        spawned = await createNextOccurrence(conn, row);
+      }
+
+      return { updated: row, nextOccurrence: spawned };
+    });
+
+    res.json({
+      success: true,
+      message: "Task updated successfully",
+      data: updated,
+      nextOccurrence: nextOccurrence || null,
+    });
   } catch (error) {
     return sendServerError(res, error);
   }
@@ -143,7 +183,10 @@ const deleteTask = async (req, res) => {
   try {
     const userId = req.user.id;
     const taskId = req.params.id;
-    const [existing] = await db.query("SELECT * FROM tasks WHERE id = ? AND user_id = ?", [taskId, userId]);
+    const [existing] = await db.query("SELECT * FROM tasks WHERE id = ? AND user_id = ?", [
+      taskId,
+      userId,
+    ]);
     if (existing.length === 0) {
       return res.status(404).json({ success: false, message: "Task not found" });
     }

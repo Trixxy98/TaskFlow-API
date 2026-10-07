@@ -10,7 +10,7 @@ Related: [PRD.md](./PRD.md) · [RULES.md](./RULES.md) · [ARCHITECTURE.md](./ARC
 
 - Engine: MySQL 8 compatible (`mysql2` pool, 10 connections).
 - Database name: `taskflow_db` (override with `DB_NAME`).
-- Charset: server default (prefer `utf8mb4` in production).
+- Charset: server default (prefer `utf8mb4` in production — required for note emojis).
 
 ## 2. Entity relationship
 
@@ -20,14 +20,11 @@ erDiagram
   users ||--o{ tasks : owns
   users ||--o{ feedback : writes
   users ||--o{ notifications : receives
+  users ||--o{ notes : owns
   users ||--o{ password_resets : has
   users ||--o{ refresh_tokens : has
-  users ||--o{ workspaces : leftover
-  users ||--o{ workspace_members : leftover
   tasks ||--o{ feedback : has
   tasks ||--o{ task_attachments : has
-  workspaces ||--o{ workspace_members : leftover
-  workspaces ||--o{ tasks : optional_fk
 
   users {
     int id PK
@@ -37,11 +34,13 @@ erDiagram
     enum plan
     varchar stripe_customer_id
     varchar stripe_subscription_id
+    tinyint notify_overdue
+    tinyint notify_due_today
+    tinyint notify_due_tomorrow
   }
   tasks {
     int id PK
     int user_id FK
-    int workspace_id FK
     varchar title
     text description
     enum status
@@ -49,6 +48,14 @@ erDiagram
     enum kanban_status
     varchar project
     date due_date
+    enum recurrence
+  }
+  notes {
+    int id PK
+    int user_id FK
+    varchar title
+    varchar emoji
+    mediumtext content
   }
   projects {
     int id PK
@@ -77,8 +84,11 @@ erDiagram
 | email | VARCHAR(150) NOT NULL UNIQUE | Login identity |
 | password | VARCHAR(255) NOT NULL | bcrypt hash |
 | plan | ENUM('free','pro') NOT NULL DEFAULT 'free' | Billing/feature plan |
-| stripe_customer_id | VARCHAR(255) NULL | Placeholder |
-| stripe_subscription_id | VARCHAR(255) NULL | Placeholder |
+| stripe_customer_id | VARCHAR(255) NULL | Stripe Customer id |
+| stripe_subscription_id | VARCHAR(255) NULL | Stripe Subscription id |
+| notify_overdue | TINYINT(1) NOT NULL DEFAULT 1 | Due-date job |
+| notify_due_today | TINYINT(1) NOT NULL DEFAULT 1 | Due-date job |
+| notify_due_tomorrow | TINYINT(1) NOT NULL DEFAULT 0 | Due-date job |
 | created_at | TIMESTAMP | Default current |
 | updated_at | TIMESTAMP | ON UPDATE current |
 
@@ -100,18 +110,18 @@ New users start on **free**. Feature matrix is not stored here; see `plans.js`.
 |--------|------|--------|
 | id | INT PK AI | |
 | user_id | INT NOT NULL FK → users.id CASCADE | |
-| workspace_id | INT NULL FK → workspaces.id SET NULL | Unused by product |
 | title | VARCHAR(255) NOT NULL | |
 | description | TEXT | |
 | status | ENUM('pending','completed') DEFAULT 'pending' | List/complete |
 | priority | ENUM('low','medium','high') DEFAULT 'medium' | |
 | kanban_status | ENUM('todo','inprogress','done') DEFAULT 'todo' | Board column |
 | project | VARCHAR(100) NULL | Label, not FK |
-| due_date | DATE | Calendar uses this |
+| due_date | DATE | Calendar + due-date notifications |
+| recurrence | ENUM('none','daily','weekly','monthly') DEFAULT 'none' | Spawns next on complete |
 | created_at | TIMESTAMP | |
 | updated_at | TIMESTAMP ON UPDATE | |
 
-`status` and `kanban_status` are independent. Completing a task from the list does not automatically set `kanban_status` to `done` unless the client sends both.
+`status` and `kanban_status` are kept in sync by task create/update when the client or API sets completion (complete → `done`, reopen → `todo`). Completing a recurring task inserts a new pending row with the next due date (plan limits apply).
 
 ### 3.4 `feedback`
 
@@ -129,12 +139,15 @@ New users start on **free**. Feature matrix is not stored here; see `plans.js`.
 |--------|------|--------|
 | id | INT PK AI | |
 | user_id | INT NOT NULL FK → users.id CASCADE | |
-| type | VARCHAR(50) NOT NULL | |
+| type | VARCHAR(50) NOT NULL | e.g. `task_overdue`, `task_due_today`, `task_due_tomorrow` |
 | title | VARCHAR(255) NOT NULL | |
 | message | TEXT | |
-| data | JSON | Optional payload |
+| data | JSON | Optional payload (`taskId`, `dueDate`) |
+| dedupe_key | VARCHAR(191) NULL | Unique with user: `type:taskId:dueDate` |
 | is_read | TINYINT(1) DEFAULT 0 | |
 | created_at | TIMESTAMP | |
+
+Unique key: `unique_user_dedupe (user_id, dedupe_key)`.
 
 ### 3.6 `password_resets`
 
@@ -172,33 +185,25 @@ Index: `idx_user_id`. Login deletes all rows for the user (one session).
 | size | INT NOT NULL | Bytes |
 | created_at | TIMESTAMP | |
 
-Binary files live in `server/uploads/{filename}`, not in MySQL.
+Binary files live in `server/uploads/{filename}`, not in MySQL. Served only via authenticated download.
 
-## 4. Tables (leftover — do not use in new features)
+### 3.9 `notes`
 
-Kept so existing databases migrate without DROP. Product UI and routes must not depend on them.
+| Column | Type | Notes |
+|--------|------|--------|
+| id | INT PK AI | |
+| user_id | INT NOT NULL FK → users.id CASCADE | |
+| title | VARCHAR(255) NOT NULL DEFAULT 'Untitled' | |
+| emoji | VARCHAR(32) NOT NULL DEFAULT '📄' | Cover emoji |
+| content | MEDIUMTEXT | TipTap HTML; app max 200000 chars |
+| created_at | TIMESTAMP | |
+| updated_at | TIMESTAMP ON UPDATE | |
 
-### 4.1 `workspaces`
+Product cap: **100** notes per user (`noteService`). Pro-only via `requireFeature("notes")`.
 
-| Column | Type |
-|--------|------|
-| id | INT PK AI |
-| owner_id | INT NOT NULL FK → users.id CASCADE |
-| name | VARCHAR(100) NOT NULL DEFAULT 'My Workspace' |
-| created_at | TIMESTAMP |
+## 4. Removed tables
 
-### 4.2 `workspace_members`
-
-| Column | Type |
-|--------|------|
-| id | INT PK AI |
-| workspace_id | INT NOT NULL FK → workspaces.id CASCADE |
-| user_id | INT NOT NULL FK → users.id CASCADE |
-| role | ENUM('owner','admin','member','viewer') DEFAULT 'member' |
-| status | ENUM('pending','accepted') DEFAULT 'pending' |
-| joined_at | TIMESTAMP |
-
-Unique `(workspace_id, user_id)`.
+`workspaces` and `workspace_members` were leftover from an old team product. `migrate.js` drops them (and `tasks.workspace_id`) on existing databases. Do not recreate them.
 
 ## 5. Enums (quick reference)
 
@@ -208,8 +213,7 @@ Unique `(workspace_id, user_id)`.
 | tasks.status | pending, completed |
 | tasks.priority | low, medium, high |
 | tasks.kanban_status | todo, inprogress, done |
-| workspace_members.role | owner, admin, member, viewer |
-| workspace_members.status | pending, accepted |
+| tasks.recurrence | none, daily, weekly, monthly |
 
 ## 6. Plan config (not a table)
 
@@ -235,10 +239,13 @@ Snapshot returned by `GET /api/subscription`:
     "calendar": false,
     "notes": false
   },
-  "manualUpgrade": true
+  "manualUpgrade": false,
+  "checkoutEnabled": true,
+  "proPriceLabel": "RM 19.99/mo"
 }
 ```
 
+`checkoutEnabled` is true when `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID` are set.  
 `usage.tasks` is `COUNT(*)` of all tasks for the user (including completed). Hitting 20 blocks **create**, not updates.
 
 ## 7. Client-only storage
@@ -248,30 +255,26 @@ Not in MySQL.
 | Key | Shape | Purpose |
 |-----|--------|---------|
 | `token` | JWT string | Access token |
-| `user` | `{ id, name, email, plan, features, limits, usage, … }` | Session + plan snapshot |
+| `user` | `{ id, name, email, plan, features, limits, usage, checkoutEnabled, … }` | Session + plan snapshot |
 | `theme` | `light` \| `dark` \| `system` | Theme |
-| `notion_pages` | Array of `{ id, title, emoji, content, updatedAt }` | Notes |
 
-Clear `token` and `user` on logout. Notes persist in the browser after logout unless the user clears site data.
+Notes are **not** durable in `localStorage`. Key `notion_pages` is only used once for migration into `/api/notes`, then deleted.
+
+Clear `token` and `user` on logout.
 
 ## 8. Migrations
 
 1. **Fresh DB:** `mysql < server/src/config/migration.sql` or `node server/scripts/migrate.js`.
-2. **Existing DB:** migrate script runs the SQL file, then:
+2. **Existing DB:** migrate script runs the SQL file, then additive `ALTER` / `CREATE TABLE IF NOT EXISTS` for plan columns, notify prefs, notification `dedupe_key`, and `notes`.
 
-```sql
-ALTER TABLE users ADD COLUMN plan ENUM('free', 'pro') NOT NULL DEFAULT 'free';
-ALTER TABLE users ADD COLUMN stripe_customer_id VARCHAR(255) DEFAULT NULL;
-ALTER TABLE users ADD COLUMN stripe_subscription_id VARCHAR(255) DEFAULT NULL;
-```
-
-Duplicate-column errors (errno 1060) are ignored.
+Duplicate-column (1060) and duplicate-key (1061) errors are ignored.
 
 Railway start command: `node scripts/migrate.js && node src/index.js`.
 
 ## 9. Integrity notes
 
-- Deleting a user cascades tasks, projects, feedback, notifications, tokens, attachments (via tasks).
-- Deleting a task cascades its feedback and attachments; disk files may remain until a cleanup job exists.
+- Deleting a user cascades tasks, projects, feedback, notifications, notes, tokens, attachments (via tasks).
+- Deleting a task cascades its feedback and attachments; disk files should be unlinked on attachment delete.
 - There is no unique constraint on `(user_id, projects.name)`.
 - There is no check that `tasks.project` matches a `projects.name`.
+- Notification dedupe prevents spam for the same task/due-date bucket.

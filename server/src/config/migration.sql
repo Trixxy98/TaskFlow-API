@@ -32,38 +32,11 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 -- ============================================================
--- WORKSPACES (must be before tasks due to FK)
--- ============================================================
-CREATE TABLE IF NOT EXISTS workspaces (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  owner_id   INT          NOT NULL,
-  name       VARCHAR(100) NOT NULL DEFAULT 'My Workspace',
-  created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- ============================================================
--- WORKSPACE MEMBERS
--- ============================================================
-CREATE TABLE IF NOT EXISTS workspace_members (
-  id           INT AUTO_INCREMENT PRIMARY KEY,
-  workspace_id INT         NOT NULL,
-  user_id      INT         NOT NULL,
-  role         ENUM('owner', 'admin', 'member', 'viewer') DEFAULT 'member',
-  status       ENUM('pending', 'accepted') DEFAULT 'pending',
-  joined_at    TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY unique_member (workspace_id, user_id),
-  FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id)      REFERENCES users(id)      ON DELETE CASCADE
-);
-
--- ============================================================
 -- TASKS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tasks (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   user_id       INT          NOT NULL,
-  workspace_id  INT          DEFAULT NULL,
   title         VARCHAR(255) NOT NULL,
   description   TEXT,
   status        ENUM('pending', 'completed') DEFAULT 'pending',
@@ -71,10 +44,10 @@ CREATE TABLE IF NOT EXISTS tasks (
   kanban_status ENUM('todo', 'inprogress', 'done') DEFAULT 'todo',
   project       VARCHAR(100) DEFAULT NULL,
   due_date      DATE,
+  recurrence    ENUM('none', 'daily', 'weekly', 'monthly') NOT NULL DEFAULT 'none',
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ============================================================
@@ -148,7 +121,6 @@ CREATE TABLE IF NOT EXISTS task_attachments (
   created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
 );
-
 
 -- ============================================================
 -- NOTES

@@ -3,6 +3,7 @@ const Joi = require("joi");
 const PRIORITY = ["low", "medium", "high"];
 const KANBAN_STATUS = ["todo", "inprogress", "done"];
 const STATUS = ["pending", "completed"];
+const RECURRENCE = ["none", "daily", "weekly", "monthly"];
 
 const createTask = Joi.object({
   title: Joi.string().min(1).max(255).trim().required().messages({
@@ -20,6 +21,9 @@ const createTask = Joi.object({
     "any.only": `Kanban status must be one of: ${KANBAN_STATUS.join(", ")}`,
   }),
   project: Joi.string().max(100).allow("", null).optional(),
+  recurrence: Joi.string().valid(...RECURRENCE).default("none").messages({
+    "any.only": `Recurrence must be one of: ${RECURRENCE.join(", ")}`,
+  }),
 });
 
 const updateTask = Joi.object({
@@ -38,6 +42,9 @@ const updateTask = Joi.object({
     "any.only": `Kanban status must be one of: ${KANBAN_STATUS.join(", ")}`,
   }),
   project: Joi.string().max(100).allow("", null).optional(),
+  recurrence: Joi.string().valid(...RECURRENCE).optional().messages({
+    "any.only": `Recurrence must be one of: ${RECURRENCE.join(", ")}`,
+  }),
 }).min(1).messages({
   "object.min": "At least one field must be provided to update",
 });

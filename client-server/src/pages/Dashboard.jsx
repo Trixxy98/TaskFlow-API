@@ -19,10 +19,12 @@ export default function Dashboard({ user, tasks, setTasks }) {
   const [newTask, setNewTask] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newPriority, setNewPriority] = useState("medium");
+  const [newRecurrence, setNewRecurrence] = useState("none");
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingDueDate, setEditingDueDate] = useState("");
   const [editingPriority, setEditingPriority] = useState("medium");
+  const [editingRecurrence, setEditingRecurrence] = useState("none");
   const [activeTab, setActiveTab] = useState("tasks");
   const [planError, setPlanError] = useState("");
   const editRef = useRef(null);
@@ -36,10 +38,18 @@ export default function Dashboard({ user, tasks, setTasks }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
-    const res = await createTask({ title: newTask, due_date: newDueDate || null, priority: newPriority });
+    const res = await createTask({
+      title: newTask,
+      due_date: newDueDate || null,
+      priority: newPriority,
+      recurrence: newRecurrence,
+    });
     if (res.success) {
       setTasks([res.data, ...tasks]);
-      setNewTask(""); setNewDueDate(""); setNewPriority("medium");
+      setNewTask("");
+      setNewDueDate("");
+      setNewPriority("medium");
+      setNewRecurrence("none");
       setPlanError("");
     } else {
       setPlanError(res.message || "Could not create task.");
@@ -49,7 +59,12 @@ export default function Dashboard({ user, tasks, setTasks }) {
   const handleToggle = async (task) => {
     const status = task.status === "pending" ? "completed" : "pending";
     const res = await updateTask(task.id, { status });
-    if (res.success) setTasks(tasks.map((t) => (t.id === task.id ? res.data : t)));
+    if (res.success) {
+      setTasks((prev) => {
+        const next = prev.map((t) => (t.id === task.id ? res.data : t));
+        return res.nextOccurrence ? [res.nextOccurrence, ...next] : next;
+      });
+    }
   };
 
   const handleDelete = async (id) => {
@@ -62,15 +77,24 @@ export default function Dashboard({ user, tasks, setTasks }) {
     setEditingTitle(task.title);
     setEditingDueDate(task.due_date ? task.due_date.split("T")[0] : "");
     setEditingPriority(task.priority || "medium");
+    setEditingRecurrence(task.recurrence || "none");
   };
 
   const handleEditSave = async (task) => {
     if (!editingTitle.trim()) { setEditingId(null); return; }
     const res = await updateTask(task.id, {
-      title: editingTitle, due_date: editingDueDate || null,
-      priority: editingPriority, status: task.status,
+      title: editingTitle,
+      due_date: editingDueDate || null,
+      priority: editingPriority,
+      recurrence: editingRecurrence,
+      status: task.status,
     });
-    if (res.success) setTasks((prev) => prev.map((t) => (t.id === task.id ? res.data : t)));
+    if (res.success) {
+      setTasks((prev) => {
+        const next = prev.map((t) => (t.id === task.id ? res.data : t));
+        return res.nextOccurrence ? [res.nextOccurrence, ...next] : next;
+      });
+    }
     setEditingId(null);
   };
 
@@ -234,6 +258,17 @@ export default function Dashboard({ user, tasks, setTasks }) {
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </select>
+              <select
+                value={newRecurrence}
+                onChange={(e) => setNewRecurrence(e.target.value)}
+                className="text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 outline-none focus:border-gray-400 dark:focus:border-gray-500 bg-transparent"
+                title="Repeat when completed"
+              >
+                <option value="none">Does not repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
               <button type="submit" className="ml-auto inline-flex items-center gap-1 bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-5 py-1.5 rounded-full transition font-medium">
                 <Plus className="w-3.5 h-3.5" /> Add
               </button>
@@ -302,6 +337,16 @@ export default function Dashboard({ user, tasks, setTasks }) {
                               <option value="medium">Medium</option>
                               <option value="low">Low</option>
                             </select>
+                            <select
+                              value={editingRecurrence}
+                              onChange={(e) => setEditingRecurrence(e.target.value)}
+                              className="text-xs border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 outline-none bg-white dark:bg-gray-950 text-gray-600 dark:text-gray-300"
+                            >
+                              <option value="none">Does not repeat</option>
+                              <option value="daily">Daily</option>
+                              <option value="weekly">Weekly</option>
+                              <option value="monthly">Monthly</option>
+                            </select>
                           </div>
                           <div className="flex gap-2">
                               <button onClick={() => handleEditSave(task)} className="inline-flex items-center gap-1 bg-gray-900 dark:bg-blue-600 hover:bg-gray-700 dark:hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded-full transition">Save</button>
@@ -317,6 +362,11 @@ export default function Dashboard({ user, tasks, setTasks }) {
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mt-1.5">
                             <span className={`text-xs px-2 py-0.5 rounded-full ${p.bg} ${p.color}`}>{p.label}</span>
+                            {task.recurrence && task.recurrence !== "none" && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 capitalize">
+                                {task.recurrence}
+                              </span>
+                            )}
                             {task.due_date && (
                               <span className={`inline-flex items-center gap-1 text-xs ${task.status === "completed" ? "text-gray-300" : isOverdue(task.due_date) ? "text-red-400" : "text-gray-400"}`}>
                                 <CalendarDays className="w-3 h-3" />

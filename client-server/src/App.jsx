@@ -138,7 +138,12 @@ export default function App() {
   const handleToggle = async (task) => {
     const status = task.status === "pending" ? "completed" : "pending";
     const res = await updateTask(task.id, { status });
-    if (res.success) setTasks((prev) => prev.map((t) => (t.id === task.id ? res.data : t)));
+    if (res.success) {
+      setTasks((prev) => {
+        const next = prev.map((t) => (t.id === task.id ? res.data : t));
+        return res.nextOccurrence ? [res.nextOccurrence, ...next] : next;
+      });
+    }
   };
 
   const handleDelete = async (id) => {

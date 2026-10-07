@@ -40,7 +40,7 @@ Demo unlock (`POST /api/subscription/activate`) only when `ALLOW_MANUAL_UPGRADE=
 ## Features
 
 - JWT auth with **refresh token rotation** (httpOnly cookie, 15-min access token)
-- Task CRUD — inline edit, due date, overdue state, priority, completion toggle
+- Task CRUD — inline edit, due date, overdue state, priority, recurrence (daily/weekly/monthly), completion toggle
 - Kanban board (drag & drop), calendar view, table view
 - **Notes** — TipTap + slash commands, persisted in MySQL (Pro)
 - Projects, Feedback, Settings (name + notification prefs)
@@ -105,7 +105,7 @@ TaskFlow API/
         ├── controllers/            # auth, tasks
         ├── middleware/             # JWT, Joi, rate limit, requireFeature, errors
         ├── routes/                 # auth, tasks, notes, subscription, stripe webhook …
-        ├── services/               # notes, stripe, subscription, AI, notifications …
+        ├── services/               # notes, stripe, subscription, AI, email, recurrence …
         └── validators/             # Joi schemas
 ```
 
@@ -128,8 +128,7 @@ mysql -u root -p < server/src/config/migration.sql
 cd server && npm run migrate
 ```
 
-Active tables include: `users`, `tasks`, `projects`, `feedback`, `notifications`, `task_attachments`, `notes`, `refresh_tokens`, `password_resets`.  
-`workspaces` / `workspace_members` are leftover schema and are not used by the product.
+Active tables include: `users`, `tasks`, `projects`, `feedback`, `notifications`, `task_attachments`, `notes`, `refresh_tokens`, `password_resets`.
 
 ### 3. Backend
 
@@ -167,6 +166,14 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_ID=price_...
 STRIPE_PRO_PRICE_LABEL=RM 19.99/mo
+
+# Optional — forgot-password email (dev still returns devResetUrl without SMTP)
+APP_URL=http://localhost:5173
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
 ```
 
 > Gemini key: [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)  

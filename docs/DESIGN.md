@@ -131,7 +131,7 @@ Auth pages are public, centered, same card language. Task create is a compact ba
 | Route | Layout notes |
 |-------|----------------|
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | No sidebar. Auth card. |
-| `/dashboard`, `/tasks` | Tabs: Tasks / Analytics. Analytics tab is gated. |
+| `/dashboard`, `/tasks` | Tabs: Tasks / Analytics. Analytics tab is gated. Create/edit include recurrence select; recurring tasks show a small badge. |
 | `/projects` | Project cards + unassigned tasks. |
 | `/kanban` | Three columns, drag handles. |
 | `/table` | Sortable table. |
@@ -141,8 +141,8 @@ Auth pages are public, centered, same card language. Task create is a compact ba
 | `/feedback` | Feedback list. |
 | `/notifications` | Paginated list, mark read. |
 | `/help` | Accordion FAQs. |
-| `/pricing` | Two-column Free vs Pro. Pro card inverted. |
-| `/settings` | Profile + plan usage + notifications. |
+| `/pricing` | Two-column Free vs Pro. Pro card inverted. Upgrade → Stripe; Manage billing when Pro. |
+| `/settings` | Profile (real Save), plan usage, notification toggles (persist immediately). |
 | `/profile` | User summary. |
 
 ## 8. Theme
@@ -174,10 +174,11 @@ Do not introduce a second nav pattern (tabs in the header, etc.) unless the scre
 
 ## 11. Content tone
 
-- Buttons: verbs (“Upgrade to Pro”, “Activate Pro (demo)”, “+ Add”).
+- Buttons: verbs (“Upgrade to Pro”, “Manage billing”, “Activate Pro (demo)”, “+ Add”).
 - Gates: “X is a Pro feature” + one benefit sentence.
 - Errors: full sentence, English, no stack traces in the UI.
 - Empty: “No upcoming tasks”, “No pages yet”.
+- Pricing when Stripe unset: “Paid checkout is not configured yet” (not a fake Save).
 
 ## 12. Do / don’t
 
@@ -192,3 +193,4 @@ Do not introduce a second nav pattern (tabs in the header, etc.) unless the scre
 - Add a third brand color beyond gray + indigo/blue + semantic red/amber/emerald.
 - Hide Pro nav items from Free users.
 - Persist notes in a new visual style that breaks the page-list + editor split.
+- Show demo activate when Checkout is configured — prefer Stripe Upgrade.
