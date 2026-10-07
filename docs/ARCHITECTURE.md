@@ -13,7 +13,7 @@ TaskFlow is a **two-process** application:
 | API + Socket.io | Node.js ≥ 20, Express 5, MySQL, Socket.io | `http://localhost:3001` |
 | SPA | React 19, Vite 8, Tailwind CSS 4 | `http://localhost:5173` |
 
-The browser never talks to MySQL. All durable data (except notes/theme) goes through REST. Realtime notifications use Socket.io on the **same** HTTP server as Express.
+The browser never talks to MySQL. Durable data goes through REST (including notes). Theme stays in `localStorage`. Realtime notifications use Socket.io on the **same** HTTP server as Express. Billing uses Stripe Checkout + webhooks.
 
 ```mermaid
 flowchart LR
@@ -36,12 +36,16 @@ flowchart LR
   MySQL[(MySQL taskflow_db)]
   Disk[uploads/]
   Gemini[Google Gemini]
+  Stripe[Stripe]
 
   SPA -->|REST + cookie| EX
   SPA -->|JWT handshake| IO
+  SPA -->|Checkout redirect| Stripe
+  Stripe -->|webhooks| EX
   SVC --> MySQL
   SVC --> Disk
   SVC --> Gemini
+  SVC --> Stripe
 ```
 
 ## 2. Repository layout
@@ -65,8 +69,8 @@ TaskFlow API/
         ├── config/            # DB pool, SQL, plans, swagger, socket
         ├── controllers/       # auth, tasks
         ├── middleware/        # JWT, validate, rate limit, requireFeature, errors
-        ├── routes/            # One router per resource
-        ├── services/          # projects, feedback, notifications, AI, subscription
+        ├── routes/            # One router per resource (+ stripeWebhook)
+        ├── services/          # notes, stripe, subscription, AI, notifications, due-date job …
         └── validators/        # Joi schemas
 ```
 
@@ -80,12 +84,14 @@ Leftover: `server/src/validators/team.validators.js` is unused. Ignore it for ne
 2. Create `http.Server` wrapping Express; `initSocket(httpServer)`.
 3. Helmet (CSP allows Swagger inline script + validator images).
 4. CORS with credentials; origin allowlist from `ALLOWED_ORIGIN`.
-5. Morgan, `express.json()`, cookie-parser.
-6. `apiLimiter` on `/api`.
-7. Mount routers (auth, tasks, projects, feedback, upload, notifications, AI, subscription).
-8. Swagger UI at `/api/docs`.
-9. `errorHandler` last.
-10. `testConnection()` then `listen(PORT)`.
+5. Morgan.
+6. **Stripe webhook** `POST /api/subscription/webhook` with `express.raw({ type: "application/json" })` **before** JSON parser.
+7. `express.json({ limit: "512kb" })`, cookie-parser.
+8. `apiLimiter` on `/api`.
+9. Mount routers (auth, tasks, projects, feedback, upload, notifications, notes, AI, subscription).
+10. Swagger UI at `/api/docs`.
+11. `errorHandler` last.
+12. `testConnection()` then `listen(PORT)`; start due-date notification job.
 
 Production start: migrate, then this file.
 
@@ -94,13 +100,14 @@ Production start: migrate, then this file.
 ```text
 Client
   → CORS + Helmet + Morgan
-  → cookie-parser + JSON
-  → /api rate limit (100/min)
+  → POST /api/subscription/webhook (raw body; before JSON; before apiLimiter)
+  → cookie-parser + JSON (512kb)
+  → /api rate limit (100/min) for other /api routes
   → router
        → authLimiter (auth routes only)
        → Joi validate (mutating routes)
        → authMiddleware (Bearer JWT)
-       → requireFeature (AI chat, upload POST)
+       → requireFeature (AI, upload POST, notes, …)
        → controller / service
   → errorHandler
 ```
@@ -111,11 +118,11 @@ Client
 
 ### Feature middleware
 
-`requireFeature("ai")` loads `users.plan`, looks up `PLANS[plan].features[ai]`. False → 403 `UPGRADE_REQUIRED`.
+`requireFeature("ai" | "attachments" | "notes" | …)` loads `users.plan`, looks up `PLANS[plan].features[…]`. False → 403 `UPGRADE_REQUIRED`.
 
 ### Plan limits
 
-`assertCanCreateTask` / `assertCanCreateProject` count rows then compare to `maxTasks` / `maxProjects`.
+`assertCanCreateTask` / `assertCanCreateProject` count rows then compare to `maxTasks` / `maxProjects` (used by REST and AI tools).
 
 ## 5. Authentication architecture
 
@@ -162,7 +169,7 @@ Pro wrappers: `/notes` and `/calendar` use `ProFeature`. Analytics is gated insi
 
 There is **no Redux**. Session and tasks live in `App` React state. Child pages receive `tasks` / `setTasks` / `user`.
 
-On login, `getSubscription()` hydrates `plan`, `features`, `limits`, `usage`, `manualUpgrade` onto `user`.
+On login / app load, `getSubscription()` hydrates `plan`, `features`, `limits`, `usage`, `manualUpgrade`, `checkoutEnabled`, `proPriceLabel` onto `user` via `applyPlan`.
 
 ### 6.3 API client
 
@@ -180,14 +187,16 @@ On login, `getSubscription()` hydrates `plan`, `features`, `limits`, `usage`, `m
 
 | Prefix | Auth | Extra gate | Responsibility |
 |--------|------|------------|----------------|
-| `/api/auth` | No (cookie on refresh/logout) | Auth rate limit | Register, login, refresh, logout, password reset |
+| `/api/auth` | Mixed | Auth rate limit on public mutators | Register, login, refresh, logout, password reset, `GET/PATCH /me` |
 | `/api/tasks` | Bearer | Create: plan limit | CRUD + pagination |
 | `/api/projects` | Bearer | Create: plan limit | List/create/delete |
 | `/api/feedback` | Bearer | — | List/create/delete |
 | `/api/upload` | Bearer | POST: `attachments`; GET file: owner check | Multer + attachment rows + authenticated download |
 | `/api/notifications` | Bearer | — | List, read, delete |
+| `/api/notes` | Bearer | `notes` | Pro notes CRUD |
 | `/api/ai` | Bearer | `ai` + 15/min | Gemini function calling |
-| `/api/subscription` | Bearer | activate: env flag | Snapshot + demo Pro |
+| `/api/subscription` | Bearer (except webhook) | activate: env flag | Snapshot, Checkout, Portal, demo activate |
+| `/api/subscription/webhook` | Stripe signature | — | Raw body; verify + `setPlan` |
 | `/api/docs` | No | — | Swagger UI |
 
 ## 8. AI architecture
@@ -207,14 +216,15 @@ System instruction: TaskFlow-only scope; always English.
 
 ## 9. Notifications architecture
 
-`createNotification(userId, type, title, message, data)`:
+`createNotification(userId, type, title, message, data, dedupeKey)`:
 
-1. INSERT row.
-2. `getIO().to("user:" + userId).emit("new_notification", row)`.
+1. INSERT row (unique `(user_id, dedupe_key)` when key set).
+2. On success: `getIO().to("user:" + userId).emit("new_notification", row)`.
+3. On duplicate key: return null, no emit.
 
 Socket server verifies JWT, then `socket.join("user:" + decoded.id)`.
 
-Team/workspace emitters were removed with collaboration; keep this helper for any future in-app events (due reminders, etc.).
+`dueDateNotificationJob` runs on server start and every 15 minutes: finds pending tasks overdue / due today / due tomorrow, respects `users.notify_*`, writes typed notifications with dedupe keys.
 
 ## 10. Subscription architecture
 
@@ -222,11 +232,14 @@ Team/workspace emitters were removed with collaboration; keep this helper for an
 users.plan  ──►  PLANS[plan]  ──►  features + limits
                      ▲
                      │
-            GET /subscription (counts usage)
-            POST /subscription/activate (setPlan pro)
+     GET /subscription (counts usage + checkoutEnabled)
+     POST /subscription/checkout → Stripe Checkout Session
+     POST /subscription/webhook → setPlan + Stripe IDs
+     POST /subscription/portal → Customer Portal
+     POST /subscription/activate → setPlan pro (env-gated demo only)
 ```
 
-Stripe customer/subscription IDs are unused. When billing lands, `setPlan` should be driven by webhooks, not a public activate route.
+Webhook events handled: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
 
 Frontend lock layers:
 
@@ -234,18 +247,19 @@ Frontend lock layers:
 |-------|-----------|
 | Route | `ProFeature` (calendar, notes) |
 | Widget | ChatBot, Attachments `locked`, Dashboard analytics tab |
-| API | `requireFeature`, `assertCanCreate*` |
+| API | `requireFeature`, `assertCanCreate*`, notes router |
 
-UI-only gates (calendar, notes, analytics) have **no** matching REST resource. A Free user who bypasses the SPA still cannot upload or chat without a Pro plan.
+Calendar and analytics remain SPA views (no dedicated REST). Notes and uploads are API-gated; a Free user who bypasses the SPA still cannot create notes, upload, or chat without Pro.
 
 ## 11. Data stores
 
 | Store | What |
 |-------|------|
-| MySQL | Users, tasks, projects, feedback, notifications, tokens, attachments metadata |
+| MySQL | Users, tasks, projects, feedback, notifications, notes, tokens, attachments metadata |
 | Disk | Uploaded binaries |
-| localStorage | Access JWT, user snapshot, theme, notes |
-| Memory | Socket.io rooms, Express rate-limit counters (per process) |
+| localStorage | Access JWT, user snapshot, theme |
+| Stripe | Customers, subscriptions, Checkout sessions |
+| Memory | Socket.io rooms, Express rate-limit counters (per process), due-date job interval |
 
 See [SCHEMA.md](./SCHEMA.md) for tables.
 
@@ -276,6 +290,10 @@ Rate-limit counters are in-process. Multiple Railway replicas would not share th
 | `ALLOWED_ORIGIN` | CORS + Socket.io origin (comma-separated) |
 | `GEMINI_API_KEY` | AI |
 | `ALLOW_MANUAL_UPGRADE` | Demo Pro activate |
+| `STRIPE_SECRET_KEY` | Stripe API |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signature verify |
+| `STRIPE_PRICE_ID` | Pro subscription Price id |
+| `STRIPE_PRO_PRICE_LABEL` | Pricing page display string |
 | `VITE_API_URL` | Frontend API base (must include `/api`) |
 
 ## 14. Deployment

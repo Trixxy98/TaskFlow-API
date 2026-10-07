@@ -2,7 +2,7 @@
 
 **Product:** TaskFlow  
 **Type:** Full-stack personal task management app  
-**Status:** Live (Railway) with Free/Pro feature gates; Stripe checkout not yet wired  
+**Status:** Live (Railway) with Free/Pro gates, Stripe Checkout (test/live), and server-synced notes  
 **Primary language:** English (UI, API, AI replies)
 
 Related docs: [DESIGN.md](./DESIGN.md) · [RULES.md](./RULES.md) · [SCHEMA.md](./SCHEMA.md) · [ARCHITECTURE.md](./ARCHITECTURE.md)
@@ -20,17 +20,16 @@ TaskFlow is a **single-user** workspace: sign in, manage your own tasks, and opt
 1. Let a signed-in user create, edit, complete, and delete tasks quickly.
 2. Offer multiple views of the same task set (list, Kanban, table, calendar).
 3. Keep the product personal: no teams, invites, or shared workspaces in the product surface.
-4. Monetize advanced features with a Free vs Pro gate **before** Stripe billing.
+4. Monetize advanced features with Free vs Pro, billed via **Stripe Checkout**.
 5. Keep the API secure enough for production (JWT rotation, rate limits, validation, Helmet).
 
 ## 3. Non-goals (current release)
 
 - Team collaboration, invites, roles, or shared workspaces (removed from product; leftover DB tables must not be exposed).
-- Stripe Checkout / recurring billing (columns exist as placeholders).
-- Server-persisted notes (notes live in `localStorage` only).
 - Mobile native apps.
 - Multi-language UI (copy is English only).
 - Public task sharing or unauthenticated task APIs.
+- Recurring tasks (not implemented yet).
 
 ## 4. Users
 
@@ -46,7 +45,7 @@ There is one role: **account owner**. Every resource is scoped to `user_id` of t
 
 | | Free | Pro |
 |---|------|-----|
-| Price | RM 0 | Coming soon (Stripe later) |
+| Price | RM 0 | Stripe subscription (label from `STRIPE_PRO_PRICE_LABEL`) |
 | Tasks | Max **20** | Unlimited |
 | Projects | Max **3** | Unlimited |
 | List / Kanban / Table / Completed | Yes | Yes |
@@ -54,10 +53,10 @@ There is one role: **account owner**. Every resource is scoped to `user_id` of t
 | File attachments | Locked | Included |
 | Analytics tab | Locked | Included |
 | Calendar | Locked | Included |
-| Notes | Locked | Included |
-| Upgrade path | `/pricing` | Demo activate in non-production (`ALLOW_MANUAL_UPGRADE`) |
+| Notes | Locked | Included (MySQL) |
+| Upgrade path | `/pricing` | Stripe Checkout; demo activate only if `ALLOW_MANUAL_UPGRADE` |
 
-Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPGRADE=true`, or when the env var is unset **and** `NODE_ENV !== production`. Production defaults to off.
+Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPGRADE=true`, or when the env var is unset **and** `NODE_ENV !== production`. Production should keep it `false`.
 
 ## 6. Functional requirements
 
@@ -72,6 +71,7 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 | AUTH-5 | Forgot / reset password | Token stored as SHA-256 hash; expired tokens rejected |
 | AUTH-6 | One active refresh session per user | New login deletes previous refresh rows |
 | AUTH-7 | Frontend idle logout | 30 minutes without mouse/keyboard/scroll/touch |
+| AUTH-8 | `GET` / `PATCH /api/auth/me` | Name + notification prefs; email locked |
 
 ### 6.2 Tasks
 
@@ -107,8 +107,9 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 
 | ID | Requirement | Acceptance |
 |----|-------------|------------|
-| NTE-1 | Notion-style pages with TipTap + slash commands | Pro only (route gated) |
-| NTE-2 | Persist pages | `localStorage` key `notion_pages` (not in MySQL) |
+| NTE-1 | Notion-style pages with TipTap + slash commands | Pro only (route + API gated) |
+| NTE-2 | Persist pages in MySQL `notes` | CRUD via `/api/notes`; max 100 notes/user; content ≤ 200k chars |
+| NTE-3 | Migrate legacy cache | If DB empty, import `localStorage.notion_pages` once then remove key |
 
 ### 6.6 Attachments
 
@@ -116,7 +117,7 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 |----|-------------|------------|
 | ATT-1 | Upload image (JPEG/PNG/GIF/WEBP) or PDF | Max 5MB; Pro only |
 | ATT-2 | Files stored on disk under `server/uploads/` | Unique timestamp filename |
-| ATT-3 | List / delete attachments for a task the user owns | Auth required |
+| ATT-3 | List / delete / download for a task the user owns | Auth required; no public static `/uploads` |
 
 ### 6.7 Feedback
 
@@ -132,6 +133,8 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 | NTF-1 | Persist notifications per user | Paginated GET |
 | NTF-2 | Mark one / all as read; delete one | Ownership enforced |
 | NTF-3 | Real-time push | Socket.io event `new_notification` to room `user:{id}` |
+| NTF-4 | Due-date job | Pending tasks: overdue / due today / due tomorrow → one row each, unique `(user_id, dedupe_key)` |
+| NTF-5 | Honor prefs | `notify_overdue`, `notify_due_today`, `notify_due_tomorrow` on `users` |
 
 ### 6.9 AI chatbot
 
@@ -141,15 +144,28 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 | AI-2 | Tools | get_tasks, create_task, update_task, delete_task, get_projects |
 | AI-3 | Scope | Task/project/productivity only; refuse off-topic |
 | AI-4 | Language | Always reply in English |
+| AI-5 | Plan limits | `create_task` uses `assertCanCreateTask` (same Free cap as REST) |
 
-### 6.10 Subscription UX
+### 6.10 Subscription / billing
 
 | ID | Requirement | Acceptance |
 |----|-------------|------------|
-| SUB-1 | `GET /api/subscription` returns plan, limits, usage, features | Used on app load |
-| SUB-2 | Pricing page `/pricing` | Compare Free vs Pro |
+| SUB-1 | `GET /api/subscription` | Plan, limits, usage, features, `checkoutEnabled`, `proPriceLabel` |
+| SUB-2 | Pricing page `/pricing` | Free vs Pro; Upgrade → Stripe Checkout when configured |
 | SUB-3 | Locked surfaces show UpgradeGate | Chat, analytics, calendar, notes, attachments |
 | SUB-4 | Sidebar lock icons | Notes and Calendar when not Pro |
+| SUB-5 | `POST /api/subscription/checkout` | Creates Stripe Checkout session (`mode: subscription`) |
+| SUB-6 | Webhooks | `checkout.session.completed` → Pro; subscription updated/deleted sync plan |
+| SUB-7 | Customer Portal | `POST /api/subscription/portal` for manage / cancel |
+| SUB-8 | Demo activate | Env-gated only; not the production upgrade path |
+
+### 6.11 Settings
+
+| ID | Requirement | Acceptance |
+|----|-------------|------------|
+| SET-1 | Save profile name | `PATCH /api/auth/me`; real persist |
+| SET-2 | Notification toggles | Persist immediately; job respects prefs |
+| SET-3 | Email | Displayed; cannot change yet |
 
 ## 7. User journeys
 
@@ -160,25 +176,34 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 3. Use Kanban / Table / Completed freely.
 4. Opening Calendar, Notes, Analytics, AI, or upload shows an upgrade prompt → `/pricing`.
 
-### 7.2 Upgrade (dev / demo)
+### 7.2 Upgrade (Stripe)
 
-1. Open Plans.
-2. Click **Activate Pro (demo)** if manual upgrade is enabled.
+1. Open Plans (requires `STRIPE_SECRET_KEY` + `STRIPE_PRICE_ID`).
+2. Click **Upgrade to Pro** → redirect to Stripe Checkout.
+3. Pay (test card `4242…` in test mode).
+4. Webhook sets `users.plan = pro` and Stripe IDs; return URL refreshes snapshot.
+5. Locked routes and widgets unlock without re-login.
+
+### 7.3 Upgrade (dev / demo)
+
+1. Open Plans when Checkout is not configured and `ALLOW_MANUAL_UPGRADE` allows it.
+2. Click **Activate Pro (demo)**.
 3. Client merges subscription snapshot into `user` in `localStorage`.
-4. Locked routes and widgets unlock without re-login.
 
-### 7.3 Daily use (Pro)
+### 7.4 Daily use (Pro)
 
 1. Add/edit tasks from Dashboard or AI.
 2. Attach files to a task.
-3. Review due dates on Calendar; write notes; check analytics.
+3. Review due dates on Calendar; write notes (synced); check analytics.
+4. Manage or cancel billing from Plans → **Manage billing**.
 
 ## 8. Success metrics (product)
 
 - Time-to-first-task after register < 2 minutes.
-- Free users never create a 21st task (API 403 `PLAN_LIMIT`).
+- Free users never create a 21st task (API 403 `PLAN_LIMIT`), including via AI.
 - Pro-gated routes never render content for Free (UpgradeGate).
 - Access token expiry is recovered via refresh without forcing login, unless refresh cookie is missing/idle timeout.
+- Paid upgrade only changes plan via verified Stripe webhooks (or env-gated demo activate).
 
 ## 9. Constraints
 
@@ -189,6 +214,7 @@ Demo unlock: `POST /api/subscription/activate` is allowed when `ALLOW_MANUAL_UPG
 
 ## 10. Open items / next
 
-1. Stripe Checkout + webhooks using `stripe_customer_id` / `stripe_subscription_id`.
-2. Persist notes server-side if they must sync across devices.
-3. Drop or hide unused `workspaces` / `workspace_members` tables when safe.
+1. Drop or hide unused `workspaces` / `workspace_members` tables when safe.
+2. Recurring tasks (optional product feature).
+3. Production email delivery for forgot-password (today: dev token in non-production).
+4. Stripe **live** mode webhook endpoint on the deployed API (not only CLI `stripe listen`).
